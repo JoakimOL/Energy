@@ -33,7 +33,11 @@ add_definitions(${LLVM_DEFINITIONS})
 add_link_options("-lLLVM-15")
 
 # add generated grammar to demo binary target
-add_executable(energyc main.cpp src/IR/astvisitor.cpp ${antlr4cpp_src_files_antlrparser})
+add_executable(energyc
+    main.cpp
+    src/IR/astvisitor.cpp
+    src/parser/parser.cpp
+    ${antlr4cpp_src_files_antlrparser})
 add_dependencies(energyc antlr4cpp antlr4cpp_generation_antlrparser)
 
 target_link_libraries(energyc antlr4-runtime)

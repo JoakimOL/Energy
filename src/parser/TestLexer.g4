@@ -36,6 +36,7 @@ BLOCKCLOSE: '}';
 COMMA: ',';
 EQUALS: '=';
 STRINGLITERAL: '"' ~'"'* '"';
+SEMICOLON: ';';
 
 INT: Digit+;
 Digit: [0-9];

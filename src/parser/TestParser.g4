@@ -54,8 +54,8 @@ program: statement+ EOF;
 
 statement: functionDeclaration
          | functionDefinition
-         | functionCall
-         | variableDeclaration;
+         | functionCall SEMICOLON
+         | variableDeclaration SEMICOLON;
 
 functionDeclaration: id parameterList '->' TYPENAME;
 functionDefinition: id parameterList '=' block;
