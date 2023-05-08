@@ -22,7 +22,7 @@ class ParserWrapper {
      * (delete, assign to smart pointer etc.).
      */
    public:
-    ParserWrapper(const std::string& program);
+    ParserWrapper(std::string_view program);
     bool validate_lex();
     MaybeAST parse();
     void printAst();

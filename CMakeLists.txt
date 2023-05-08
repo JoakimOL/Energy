@@ -37,6 +37,8 @@ add_executable(energyc
     main.cpp
     src/IR/astvisitor.cpp
     src/parser/parser.cpp
+    src/utils/cli.cpp
+    src/utils/programreader.cpp
     ${antlr4cpp_src_files_antlrparser})
 add_dependencies(energyc antlr4cpp antlr4cpp_generation_antlrparser)
 

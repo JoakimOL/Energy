@@ -2,9 +2,9 @@
 
 #include <iostream>
 
-ParserWrapper::ParserWrapper(const std::string& program)
+ParserWrapper::ParserWrapper(std::string_view program)
     : lexer(&input), tokens(&lexer), parser(&tokens) {
-    input = antlr4::ANTLRInputStream(program);
+    input = antlr4::ANTLRInputStream(program.data());
 }
 
 bool ParserWrapper::validate_lex() {
