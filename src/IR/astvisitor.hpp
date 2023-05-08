@@ -1,5 +1,5 @@
-#ifndef COMPILER
-#define COMPILER
+#ifndef ASTVISITOR_H
+#define ASTVISITOR_H
 #include <memory>
 #include <string>
 
@@ -27,4 +27,4 @@ class AstVisitor {
     std::unique_ptr<llvm::IRBuilder<>> builder;
 };
 
-#endif  // COMPILER
+#endif  // ASTVISITOR_H

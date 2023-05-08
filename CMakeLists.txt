@@ -8,8 +8,8 @@ find_package(LLVM 15 REQUIRED CONFIG)
 message("LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 
 # compiler must be 11 or 14?
-SET (CMAKE_CXX_STANDARD 14)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+SET(CMAKE_CXX_STANDARD 17)
+SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # set variable pointing to the antlr tool that supports C++
 set(ANTLR4CPP_JAR_LOCATION ${PROJECT_SOURCE_DIR}/thirdparty/antlr/antlr-4.7-complete.jar)

@@ -1,6 +1,6 @@
-#include "src/IR/astvisitor.hpp"
 #include "TestLexer.h"
 #include "TestParser.h"
+#include "src/IR/astvisitor.hpp"
 #include "src/parser/parser.hpp"
 
 int main() {
