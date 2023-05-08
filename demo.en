@@ -1,0 +1,4 @@
+main(i8 argc, [string] argv) -> i8
+main(argc, argv) = {
+    print("hello world!");
+}
