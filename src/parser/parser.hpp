@@ -3,10 +3,10 @@
 
 #include <optional>
 
-#include "TestLexer.h"
-#include "TestParser.h"
+#include "EnergyLexer.h"
+#include "EnergyParser.h"
 
-using MaybeAST = std::optional<antlrparser::TestParser::ProgramContext*>;
+using MaybeAST = std::optional<energy::EnergyParser::ProgramContext*>;
 
 class ParserWrapper {
     /**
@@ -31,9 +31,9 @@ class ParserWrapper {
 
    private:
     antlr4::ANTLRInputStream input;
-    antlrparser::TestLexer lexer;
+    energy::EnergyLexer lexer;
     antlr4::CommonTokenStream tokens;
-    antlrparser::TestParser parser;
+    energy::EnergyParser parser;
 };
 
 #endif  // PARSER_HPP

@@ -1,4 +1,4 @@
-lexer grammar TestLexer;
+lexer grammar EnergyLexer;
 
 @lexer::header {
 #pragma GCC diagnostic ignored "-Wattributes"

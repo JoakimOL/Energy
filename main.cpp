@@ -1,5 +1,5 @@
-#include "TestLexer.h"
-#include "TestParser.h"
+#include "EnergyLexer.h"
+#include "EnergyParser.h"
 #include "src/IR/astvisitor.hpp"
 #include "src/parser/parser.hpp"
 #include "src/utils/cli.hpp"

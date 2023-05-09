@@ -21,11 +21,11 @@ link_directories( ${ANTLR4CPP_LIBS} )
 message(STATUS "Found antlr4cpp libs: ${ANTLR4CPP_LIBS} and includes: ${ANTLR4CPP_INCLUDE_DIRS} ")
 
 # Call macro to add lexer and grammar to your build dependencies.
-antlr4cpp_process_grammar(demo antlrparser
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/TestLexer.g4
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/TestParser.g4)
+antlr4cpp_process_grammar(Energy energy
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/EnergyLexer.g4
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/EnergyParser.g4)
 # include generated files in project environment
-include_directories(${antlr4cpp_include_dirs_antlrparser})
+include_directories(${antlr4cpp_include_dirs_energy})
 
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
@@ -39,7 +39,7 @@ add_executable(energyc
     src/parser/parser.cpp
     src/utils/cli.cpp
     src/utils/programreader.cpp
-    ${antlr4cpp_src_files_antlrparser})
-add_dependencies(energyc antlr4cpp antlr4cpp_generation_antlrparser)
+    ${antlr4cpp_src_files_energy})
+add_dependencies(energyc antlr4cpp antlr4cpp_generation_energy)
 
 target_link_libraries(energyc antlr4-runtime)

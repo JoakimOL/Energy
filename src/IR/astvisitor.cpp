@@ -1,12 +1,12 @@
 #include "astvisitor.hpp"
 
-void AstVisitor::compile(antlrparser::TestParser::ProgramContext* program) {
+void AstVisitor::compile(energy::EnergyParser::ProgramContext* program) {
     this->visitProg(program);
 
     saveModuleToFile("./out.ll");
 }
 
-void AstVisitor::visitProg(antlrparser::TestParser::ProgramContext* program) {
+void AstVisitor::visitProg(energy::EnergyParser::ProgramContext* program) {
     auto functionType =
         llvm::FunctionType::get(llvm::Type::getInt32Ty(*ctx), false);
     auto function = llvm::Function::Create(

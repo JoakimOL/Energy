@@ -1,7 +1,7 @@
-parser grammar TestParser;
+parser grammar EnergyParser;
 
 options {
-	tokenVocab = TestLexer;
+	tokenVocab = EnergyLexer;
 }
 
 @parser::header {

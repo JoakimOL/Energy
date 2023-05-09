@@ -19,7 +19,7 @@ bool ParserWrapper::validate_lex() {
 }
 
 MaybeAST ParserWrapper::parse() {
-    antlrparser::TestParser::ProgramContext* res = parser.program();
+    energy::EnergyParser::ProgramContext* res = parser.program();
     auto num_errors = parser.getNumberOfSyntaxErrors();
     std::cout << "parser errors: " << num_errors << std::endl << std::flush;
     if (num_errors) {
