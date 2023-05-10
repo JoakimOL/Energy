@@ -1,5 +1,8 @@
-main(i8 argc, [string] argv) -> i8
-main(i8 argc, [string] argv) = {
-    i8 foo = 42;
-    print("%d\n", foo);
+main(i8 argc) -> i8
+main(i8 argc) = {
+    i8 number = 28;
+    {
+        i8 number = 10;
+    }
+    return number;
 }

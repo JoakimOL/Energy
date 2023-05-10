@@ -8,16 +8,18 @@ options {
 #pragma GCC diagnostic ignored "-Wattributes"
 }
 
-program: statement+ EOF;
+program: toplevel+ EOF;
 
-statement: functionDeclaration
-         | functionDefinition
-         | functionCall SEMICOLON
+toplevel: functionDeclaration
+        | functionDefinition;
+
+statement: functionCall SEMICOLON
          | variableDeclaration SEMICOLON
-         | returnStatement SEMICOLON;
+         | returnStatement SEMICOLON
+         | block;
 
 functionDeclaration: id parameterList '->' TYPENAME;
-functionDefinition: id parameterList '=' block;
+functionDefinition: id parameterList '=' block | statement;
 functionCall: id argumentList;
 variableDeclaration: TYPENAME id '=' expression;
 returnStatement: RETURNKEYWORD expression;
@@ -28,8 +30,7 @@ argumentList: '(' ')'
 parameterList: '(' ')'
              | '(' params+=typedValue(COMMA params+=typedValue)* ')';
 
-block: statement
-     | '{' statement* '}';
+block: '{' statement* '}';
 
 // typedValueList: typedValue
 //               | typedValue, typedValueList;

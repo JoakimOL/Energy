@@ -26,3 +26,6 @@ fragment LETTER : [a-zA-Z\u0080-\uFFFF];
 
 WS: [ \t]+ -> skip;
 LINETERMINATOR: [\r\n] -> channel(HIDDEN);
+// Comments
+Comment: '//' CommentLine* -> skip;
+fragment CommentLine: ~ [\\\r\n];

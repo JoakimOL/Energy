@@ -30,6 +30,8 @@ class AstVisitor {
 
     void visitProgram(energy::EnergyParser::ProgramContext *context);
 
+    void visitToplevel(energy::EnergyParser::ToplevelContext *context);
+
     void visitStatement(energy::EnergyParser::StatementContext *context);
 
     void visitFunctionDeclaration(
@@ -48,7 +50,7 @@ class AstVisitor {
     std::vector<llvm::Type *> visitParameterList(
         energy::EnergyParser::ParameterListContext *context);
 
-    void visitBlock(energy::EnergyParser::BlockContext *context);
+    void visitBlock(energy::EnergyParser::BlockContext *context, const std::string& name="");
 
     void visitTypedValue(energy::EnergyParser::TypedValueContext *context);
 

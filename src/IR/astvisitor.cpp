@@ -37,41 +37,41 @@ void AstVisitor::saveModuleToFile(const std::string &filename) {
 
 /**
  * Program is the main entry point of the grammar
- * It consists of one of more statements, so this visitor
- * will have to recursively visit the statements.
+ * It consists of one of more top level statements, so this visitor
+ * will have to recursively visit them.
  *
- * program: statement+ EOF;
+ * program: toplevel+ EOF;
  *
- * ~Since this is the entry point, the visitor will create
- * a main function.~
- *
- * ^ this is dumb, so lets not
  */
 void AstVisitor::visitProgram(energy::EnergyParser::ProgramContext *program) {
-    for (const auto &statement : program->statement())
-        visitStatement(statement);
+    for (const auto &statement : program->toplevel())
+        visitToplevel(statement);
 
     return;
 }
 
-/**
- * A  statement can be a bunch of things.
- *
- * statement: functionDeclaration
- *          | functionDefinition
- *          | functionCall SEMICOLON
- *          | variableDeclaration SEMICOLON;
- *
- */
-void AstVisitor::visitStatement(
-    energy::EnergyParser::StatementContext *context) {
+void AstVisitor::visitToplevel(energy::EnergyParser::ToplevelContext *context){
     if (auto funcDec = context->functionDeclaration()) {
         spdlog::info("found function declaration");
         visitFunctionDeclaration(funcDec);
     } else if (auto funcDef = context->functionDefinition()) {
         spdlog::info("found function definition");
         visitFunctionDefinition(funcDef);
-    } else if (auto funcCall = context->functionCall()) {
+    }
+}
+
+/**
+ * A  statement can be a bunch of things.
+ *
+ * statement: functionCall SEMICOLON
+ *          | variableDeclaration SEMICOLON
+ *          | returnStatement SEMICOLON
+ *          | block;
+ *
+ */
+void AstVisitor::visitStatement(
+    energy::EnergyParser::StatementContext *context) {
+    if (auto funcCall = context->functionCall()) {
         spdlog::info("found function call");
         visitFunctionCall(funcCall);
     } else if (auto varDec = context->variableDeclaration()) {
@@ -80,6 +80,9 @@ void AstVisitor::visitStatement(
     } else if (auto returnStat = context->returnStatement()) {
         spdlog::info("found return statement");
         visitReturnStatement(returnStat);
+    } else if (auto block = context->block()) {
+        spdlog::info("found block");
+        visitBlock(block);
     } else {
         spdlog::info("i dunno what this is lol bai");
         return;
@@ -123,17 +126,20 @@ void AstVisitor::visitFunctionDefinition(
 
     basicBlock->insertInto(function);
     builder->SetInsertPoint(basicBlock);
-    scopeManager_.pushScope(name);
-    visitBlock(context->block());
+    // scopeManager_.pushScope(name);
+    visitBlock(context->block(), name);
 
     // builder->CreateRet(
     // llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ctx), 0, true));
 }
 
-void AstVisitor::visitBlock(energy::EnergyParser::BlockContext *context) {
-    spdlog::debug(context->getText());
+void AstVisitor::visitBlock(energy::EnergyParser::BlockContext *context, const std::string& name) {
+    spdlog::info("entering block. depth: {}", scopeManager_.depth());
+    scopeManager_.pushScope(name);
     for (const auto &statement : context->statement())
         visitStatement(statement);
+    scopeManager_.popScope();
+    spdlog::info("exiting block");
 }
 
 /**
@@ -156,7 +162,7 @@ void AstVisitor::visitVariableDeclaration(
     auto allocation =
         builder->CreateAlloca(llvm::Type::getInt32Ty(*ctx), nullptr, name);
     scopeManager_.currentScope().insertSymbol(name, allocation);
-    builder->CreateStore(/* value*/ value, /*allocated memory */ allocation);
+    builder->CreateStore(/* value */ value, /* allocated memory */ allocation);
     return;
 }
 
@@ -188,9 +194,11 @@ void AstVisitor::visitFunctionCall(
 llvm::Value *AstVisitor::visitExpression(
     energy::EnergyParser::ExpressionContext *context) {
     if (auto id = context->id()) {
-        spdlog::info("found an identifier expression");
         auto name = id->getText();
-        auto *value = static_cast<llvm::AllocaInst *>(scopeManager_.getSymbol(name).value());
+        spdlog::info("found an identifier expression. name: {}", name);
+        auto *value = static_cast<llvm::AllocaInst *>(scopeManager_.getSymbol(name).value_or(nullptr));
+        if(!value)
+            spdlog::error("identifier not found");
         auto loadinst = builder->CreateLoad(value->getAllocatedType(), value, name);
         return loadinst;
     } else if (auto literal = context->literal()) {

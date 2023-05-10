@@ -23,12 +23,13 @@ class ScopeManager {
    public:
     std::optional<llvm::Value*> getSymbol(const std::string& identifier);
     Scope& pushScope(const std::string& scopeName) {
-        scopes.push_back(Scope(scopeName));
+        scopes.push_front(Scope(scopeName));
         return currentScope();
     };
-    void popScope() { scopes.pop_back(); }
+    void popScope() { scopes.pop_front(); }
+    size_t depth() { return scopes.size(); }
     Scope& globalScope() { return globalScope_; }
-    Scope& currentScope() { return scopes.back(); }
+    Scope& currentScope() { return scopes.front(); }
 
    private:
     std::deque<Scope> scopes;
