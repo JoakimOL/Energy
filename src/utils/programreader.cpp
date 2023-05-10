@@ -2,11 +2,12 @@
 
 #include <fstream>
 #include <sstream>
+
 #include "spdlog/spdlog.h"
 
 void ProgramReader::readFromFile(const std::string& filename) {
     std::ifstream file{filename};
-    if(!file.is_open()) {
+    if (!file.is_open()) {
         spdlog::info("File opening failed! Does it exist?");
         return;
     }
@@ -18,4 +19,6 @@ void ProgramReader::readFromStdin() {
     spdlog::info("ay lmao");
     return;
 }
-std::optional<std::string_view> ProgramReader::getProgram() const { return program; }
+std::optional<std::string_view> ProgramReader::getProgram() const {
+    return program;
+}

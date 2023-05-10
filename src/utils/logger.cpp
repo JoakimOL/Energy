@@ -2,7 +2,6 @@
 
 #include "spdlog/sinks/rotating_file_sink.h"
 
-
 void setup_logger(const std::string& name) {
     size_t max_size = 1048576 * 5;
     auto logger =

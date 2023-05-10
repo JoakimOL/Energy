@@ -12,17 +12,12 @@
 class AstVisitor {
    public:
     AstVisitor()
-        : ctx(std::make_unique<llvm::LLVMContext>())
-        , module(std::make_unique<llvm::Module>("EnergyLLVM", *ctx))
-        , builder(std::make_unique<llvm::IRBuilder<>>(*ctx))
-        , scopes{Scope("global")}
-        // , globalScope{scopes.front()}
-        // , currentScope{scopes.front()}
-    {}
+        : ctx(std::make_unique<llvm::LLVMContext>()),
+          module(std::make_unique<llvm::Module>("EnergyLLVM", *ctx)),
+          builder(std::make_unique<llvm::IRBuilder<>>(*ctx)),
+          scopes{Scope("global")} {}
 
     void compile(energy::EnergyParser::ProgramContext *program);
-    // Scope& globalScope;
-    // Scope& currentScope;
     Scope &globalScope() { return scopes.front(); }
     Scope &currentScope() { return scopes.back(); }
 
@@ -55,11 +50,10 @@ class AstVisitor {
 
     void visitTypedValue(energy::EnergyParser::TypedValueContext *context);
 
-    void visitReturnStatement(energy::EnergyParser::ReturnStatementContext *context);
+    void visitReturnStatement(
+        energy::EnergyParser::ReturnStatementContext *context);
 
-    // void visitId(energy::EnergyParser::IdContext *context);
-
-    llvm::Value* visitLiteral(energy::EnergyParser::LiteralContext *context);
+    llvm::Value *visitLiteral(energy::EnergyParser::LiteralContext *context);
 
     llvm::Value *visitExpression(
         energy::EnergyParser::ExpressionContext *context);

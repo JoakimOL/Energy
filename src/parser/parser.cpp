@@ -1,4 +1,5 @@
 #include "parser.hpp"
+
 #include "spdlog/spdlog.h"
 
 ParserWrapper::ParserWrapper(std::string_view program)
@@ -23,14 +24,12 @@ MaybeAST ParserWrapper::parse() {
     if (num_errors) {
         spdlog::warn("Syntax error! Go fuck yourself!");
         ast = std::nullopt;
-    }
-    else
+    } else
         ast = res;
     return ast;
 }
 
 void ParserWrapper::printAst() {
-    if (ast.has_value())
-        spdlog::info((*ast)->toStringTree(&parser));
+    if (ast.has_value()) spdlog::info((*ast)->toStringTree(&parser));
     return;
 }

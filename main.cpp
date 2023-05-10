@@ -3,23 +3,22 @@
 #include "src/IR/astvisitor.hpp"
 #include "src/parser/parser.hpp"
 #include "src/utils/cli.hpp"
-#include "src/utils/programreader.hpp"
 #include "src/utils/logger.hpp"
+#include "src/utils/programreader.hpp"
 
 int main(int argc, char** argv) {
-
     ArgParser argParser(argc, argv);
 
     setup_logger();
 
     ProgramReader programReader;
-    if(argParser.hasArg("--stdin"))
+    if (argParser.hasArg("--stdin"))
         programReader.readFromStdin();
     else
-        programReader.readFromFile(argParser.getArgValue("-f","../demo.en"));
+        programReader.readFromFile(argParser.getArgValue("-f", "../demo.en"));
 
     auto program = programReader.getProgram();
-    if(!program.has_value()) {
+    if (!program.has_value()) {
         spdlog::info("Could not read program. Exiting");
         return 1;
     }

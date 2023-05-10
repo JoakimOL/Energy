@@ -1,7 +1,8 @@
 #include "cli.hpp"
-#include "spdlog/spdlog.h"
 
 #include <algorithm>
+
+#include "spdlog/spdlog.h"
 
 ArgParser::ArgParser(int argc, char** argv) : executableName(argv[0]) {
     for (int i = 1; i < argc; i++) {

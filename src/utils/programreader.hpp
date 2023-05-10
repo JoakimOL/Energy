@@ -1,7 +1,7 @@
 #ifndef PROGRAMREADER_HPP
 #define PROGRAMREADER_HPP
-#include <string>
 #include <optional>
+#include <string>
 
 class ProgramReader {
    public:

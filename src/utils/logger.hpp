@@ -7,5 +7,4 @@
 
 void setup_logger(const std::string& name = "basic_logger");
 
-
 #endif  // LOGGER_HPP
