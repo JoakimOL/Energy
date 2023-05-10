@@ -1,13 +1,13 @@
 #include "programreader.hpp"
 
 #include <fstream>
-#include <iostream>
 #include <sstream>
+#include "spdlog/spdlog.h"
 
 void ProgramReader::readFromFile(const std::string& filename) {
     std::ifstream file{filename};
     if(!file.is_open()) {
-        std::cout << "File opening failed! Does it exist?" << std::endl;
+        spdlog::info("File opening failed! Does it exist?");
         return;
     }
     std::ostringstream ss;
@@ -15,7 +15,7 @@ void ProgramReader::readFromFile(const std::string& filename) {
     program = ss.str();
 }
 void ProgramReader::readFromStdin() {
-    std::cout << "ay lmao" << std::endl;
+    spdlog::info("ay lmao");
     return;
 }
 std::optional<std::string_view> ProgramReader::getProgram() const { return program; }

@@ -5,6 +5,7 @@ PROJECT(Energy)
 LIST( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake )
 
 find_package(LLVM 15 REQUIRED CONFIG)
+find_package(spdlog REQUIRED)
 message("LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 
 # compiler must be 11 or 14?
@@ -40,7 +41,11 @@ add_executable(energyc
     src/parser/parser.cpp
     src/utils/cli.cpp
     src/utils/programreader.cpp
+    src/utils/logger.cpp
     ${antlr4cpp_src_files_energy})
 add_dependencies(energyc antlr4cpp antlr4cpp_generation_energy)
 
-target_link_libraries(energyc antlr4-runtime)
+target_link_libraries(energyc PRIVATE
+    antlr4-runtime
+    spdlog::spdlog
+)

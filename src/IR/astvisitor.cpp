@@ -1,15 +1,16 @@
 #include "astvisitor.hpp"
+#include "spdlog/spdlog.h"
 
 llvm::Type *AstVisitor::map_type_to_llvm_type(const std::string &type) {
     if (type == "i8") {
-        std::cout << "returning int type" << std::endl;
+        spdlog::info("returning int type" );
         return llvm::Type::getInt32Ty(*ctx);
     }
     else if( type == "string") {
-        std::cout << "returning string type (i8 array)" << std::endl;
+        spdlog::info("returning string type (i8 array)" );
         return llvm::Type::getInt8PtrTy(*ctx);
     }
-    std::cout << "couldn't find type! returning" << std::endl;
+    spdlog::info("couldn't find type! returning" );
     exit(1);
 }
 
@@ -76,24 +77,23 @@ void AstVisitor::visitProgram(energy::EnergyParser::ProgramContext *program) {
  */
 void AstVisitor::visitStatement(
     energy::EnergyParser::StatementContext *context) {
-    // std::cout << context->getText() << std::endl;
     if (auto funcDec = context->functionDeclaration()) {
-        std::cout << "found function declaration" << std::endl;
+        spdlog::info("found function declaration" );
         visitFunctionDeclaration(funcDec);
     } else if (auto funcDef = context->functionDefinition()) {
-        std::cout << "found function definition" << std::endl;
+        spdlog::info("found function definition" );
         visitFunctionDefinition(funcDef);
     } else if (auto funcCall = context->functionCall()) {
-        std::cout << "found function call" << std::endl;
+        spdlog::info("found function call" );
         visitFunctionCall(funcCall);
     } else if (auto varDec = context->variableDeclaration()) {
-        std::cout << "found variableDeclaration" << std::endl;
+        spdlog::info("found variableDeclaration" );
         visitVariableDeclaration(varDec);
     } else if (auto returnStat = context->returnStatement()) {
-        std::cout << "found return statement" << std::endl;
+        spdlog::info("found return statement" );
         visitReturnStatement(returnStat);
     } else {
-        std::cout << "i dunno what this is lol bai" << std::endl;
+        spdlog::info("i dunno what this is lol bai" );
         return;
     }
     return;
@@ -105,7 +105,7 @@ void AstVisitor::visitStatement(
  */
 void AstVisitor::visitFunctionDeclaration(
     energy::EnergyParser::FunctionDeclarationContext *context) {
-    std::cout << context->getText() << std::endl;
+    spdlog::info(context->getText() );
 
     auto type = map_type_to_llvm_type(context->TYPENAME()->getText());
     auto name = context->id()->getText();
@@ -116,8 +116,7 @@ void AstVisitor::visitFunctionDeclaration(
         this->module.get());
 
     globalScope().insertSymbol(name, function);
-    std::cout << "number of symbols after " << name << ": "
-              << globalScope().size() << std::endl;
+    spdlog::info("number of symbols after {}: {}", name, globalScope().size() );
 }
 
 /**
@@ -125,7 +124,7 @@ void AstVisitor::visitFunctionDeclaration(
  */
 void AstVisitor::visitFunctionDefinition(
     energy::EnergyParser::FunctionDefinitionContext *context) {
-    std::cout << context->getText() << std::endl;
+    spdlog::info(context->getText() );
 
     auto basicBlock = llvm::BasicBlock::Create(builder->getContext());
     auto name = context->id()->getText();
@@ -142,7 +141,7 @@ void AstVisitor::visitFunctionDefinition(
 }
 
 void AstVisitor::visitBlock(energy::EnergyParser::BlockContext *context) {
-    std::cout << context->getText() << std::endl;
+    spdlog::info(context->getText() );
     for (const auto &statement : context->statement())
         visitStatement(statement);
 }
@@ -152,7 +151,7 @@ void AstVisitor::visitBlock(energy::EnergyParser::BlockContext *context) {
  */
 void AstVisitor::visitReturnStatement(
     energy::EnergyParser::ReturnStatementContext *context) {
-    std::cout << context->getText() << std::endl;
+    spdlog::info(context->getText() );
     auto value = visitExpression(context->expression());
     builder->CreateRet(value);
 }
@@ -165,7 +164,7 @@ void AstVisitor::visitVariableDeclaration(
     // builder->CreateStore(
     auto name = context->id()->getText();
     auto value = visitExpression(context->expression());
-    std::cout << "name: " << name;
+    spdlog::info("name: {}", name);
     auto allocation =
         builder->CreateAlloca(llvm::Type::getInt32Ty(*ctx), nullptr, name);
     // builder->createStore(
@@ -174,12 +173,12 @@ void AstVisitor::visitVariableDeclaration(
 
 void AstVisitor::visitParameterList(
     energy::EnergyParser::ParameterListContext *context) {
-    std::cout << context->getText() << std::endl;
+    spdlog::info(context->getText() );
 }
 
 void AstVisitor::visitFunctionCall(
     energy::EnergyParser::FunctionCallContext *context) {
-    std::cout << context->getText() << std::endl;
+    spdlog::info(context->getText() );
 }
 
 /**
@@ -189,14 +188,14 @@ void AstVisitor::visitFunctionCall(
  */
 llvm::Value *AstVisitor::visitExpression(
     energy::EnergyParser::ExpressionContext *context) {
-    // std::cout << context->getText() << std::endl;
+    // spdlog::info(context->getText() );
     if (auto id = context->id()) {
-        std::cout << "found an identifier" << std::endl;
+        spdlog::info("found an identifier" );
     } else if (auto literal = context->literal()) {
-        std::cout << "found a literal" << std::endl;
+        spdlog::info("found a literal" );
         return visitLiteral(literal);
     } else if (auto expression = context->expression()) {
-        std::cout << "found an expression" << std::endl;
+        spdlog::info("found an expression" );
         return visitExpression(expression);
     }
     return nullptr;
@@ -204,11 +203,11 @@ llvm::Value *AstVisitor::visitExpression(
 
 llvm::Value *AstVisitor::visitLiteral(
     energy::EnergyParser::LiteralContext *context) {
-    std::cout << context->getText() << std::endl;
+    spdlog::info(context->getText() );
     if (auto INT = context->INT()) {
         int value;
         llvm::StringRef(INT->getText()).getAsInteger(/*radix=*/10, value);
-        std::cout << "found an int literal: " << value << std::endl;
+        spdlog::info("found an int literal: {}", value );
         return llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ctx), value);
     } else if (auto STRING = context->STRINGLITERAL()) {
         auto value = STRING->getText();

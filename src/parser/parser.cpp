@@ -1,6 +1,5 @@
 #include "parser.hpp"
-
-#include <iostream>
+#include "spdlog/spdlog.h"
 
 ParserWrapper::ParserWrapper(std::string_view program)
     : lexer(&input), tokens(&lexer), parser(&tokens) {
@@ -9,10 +8,9 @@ ParserWrapper::ParserWrapper(std::string_view program)
 
 bool ParserWrapper::validate_lex() {
     auto num_errors = lexer.getNumberOfSyntaxErrors();
-    std::cout << "lexer errors: " << num_errors << std::endl << std::flush;
+    spdlog::info("lexer errors: {}", num_errors);
     if (num_errors) {
-        std::cerr << "Lexer error! Ignoring and attempting to go on"
-                  << std::endl;
+        spdlog::warn("Lexer error! Ignoring and attempting to go on");
         return false;
     }
     return true;
@@ -21,9 +19,9 @@ bool ParserWrapper::validate_lex() {
 MaybeAST ParserWrapper::parse() {
     energy::EnergyParser::ProgramContext* res = parser.program();
     auto num_errors = parser.getNumberOfSyntaxErrors();
-    std::cout << "parser errors: " << num_errors << std::endl << std::flush;
+    spdlog::info("parser errors: {}", num_errors);
     if (num_errors) {
-        std::cerr << "Syntax error! Go fuck yourself!" << std::endl;
+        spdlog::warn("Syntax error! Go fuck yourself!");
         ast = std::nullopt;
     }
     else
@@ -33,6 +31,6 @@ MaybeAST ParserWrapper::parse() {
 
 void ParserWrapper::printAst() {
     if (ast.has_value())
-        std::cout << (*ast)->toStringTree(&parser) << std::endl << std::flush;
+        spdlog::info((*ast)->toStringTree(&parser));
     return;
 }

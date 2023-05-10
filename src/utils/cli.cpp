@@ -1,13 +1,13 @@
 #include "cli.hpp"
+#include "spdlog/spdlog.h"
 
 #include <algorithm>
-#include <iostream>
 
 ArgParser::ArgParser(int argc, char** argv) : executableName(argv[0]) {
     for (int i = 1; i < argc; i++) {
         args.push_back(argv[i]);
     }
-    for (auto arg : args) std::cout << arg << std::endl;
+    for (auto arg : args) spdlog::info(arg);
 }
 bool ArgParser::hasArg(const std::string& arg) const {
     return std::find(args.cbegin(), args.cend(), arg) != args.cend();

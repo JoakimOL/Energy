@@ -4,10 +4,13 @@
 #include "src/parser/parser.hpp"
 #include "src/utils/cli.hpp"
 #include "src/utils/programreader.hpp"
+#include "src/utils/logger.hpp"
 
 int main(int argc, char** argv) {
 
     ArgParser argParser(argc, argv);
+
+    setup_logger();
 
     ProgramReader programReader;
     if(argParser.hasArg("--stdin"))
@@ -17,7 +20,7 @@ int main(int argc, char** argv) {
 
     auto program = programReader.getProgram();
     if(!program.has_value()) {
-        std::cout << "Could not read program. Exiting" << std::endl;
+        spdlog::info("Could not read program. Exiting");
         return 1;
     }
     ParserWrapper parser(*program);
