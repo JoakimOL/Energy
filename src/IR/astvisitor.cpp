@@ -106,8 +106,7 @@ void AstVisitor::visitFunctionDeclaration(
         functionType, llvm::GlobalValue::LinkageTypes::ExternalLinkage, name,
         this->module.get());
 
-    globalScope().insertSymbol(name, function);
-    spdlog::info("number of symbols after {}: {}", name, globalScope().size());
+    scopeManager_.globalScope().insertSymbol(name, function);
 }
 
 /**
@@ -119,12 +118,12 @@ void AstVisitor::visitFunctionDefinition(
 
     auto basicBlock = llvm::BasicBlock::Create(builder->getContext());
     auto name = context->id()->getText();
-    auto function =
-        static_cast<llvm::Function *>(globalScope().getSymbol(name));
+    auto function = static_cast<llvm::Function *>(
+        scopeManager_.globalScope().getSymbol(name).value_or(nullptr));
 
     basicBlock->insertInto(function);
     builder->SetInsertPoint(basicBlock);
-    scopes.emplace_back(Scope(name));
+    scopeManager_.pushScope(name);
     visitBlock(context->block());
 
     // builder->CreateRet(
@@ -154,10 +153,10 @@ void AstVisitor::visitVariableDeclaration(
     energy::EnergyParser::VariableDeclarationContext *context) {
     auto name = context->id()->getText();
     auto value = visitExpression(context->expression());
-    spdlog::info("name: {}", name);
     auto allocation =
         builder->CreateAlloca(llvm::Type::getInt32Ty(*ctx), nullptr, name);
-    // builder->createStore(
+    scopeManager_.currentScope().insertSymbol(name, allocation);
+    builder->CreateStore(/* value*/ value, /*allocated memory */ allocation);
     return;
 }
 
@@ -193,7 +192,11 @@ void AstVisitor::visitFunctionCall(
 llvm::Value *AstVisitor::visitExpression(
     energy::EnergyParser::ExpressionContext *context) {
     if (auto id = context->id()) {
-        spdlog::info("found an identifier");
+        spdlog::info("found an identifier expression");
+        auto name = id->getText();
+        auto *value = static_cast<llvm::AllocaInst *>(scopeManager_.getSymbol(name).value());
+        auto loadinst = builder->CreateLoad(value->getAllocatedType(), value, name);
+        return loadinst;
     } else if (auto literal = context->literal()) {
         spdlog::info("found a literal");
         return visitLiteral(literal);

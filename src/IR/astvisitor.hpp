@@ -14,14 +14,16 @@ class AstVisitor {
     AstVisitor()
         : ctx(std::make_unique<llvm::LLVMContext>()),
           module(std::make_unique<llvm::Module>("EnergyLLVM", *ctx)),
-          builder(std::make_unique<llvm::IRBuilder<>>(*ctx)),
-          scopes{Scope("global")} {}
+          builder(std::make_unique<llvm::IRBuilder<>>(*ctx))
+    // scopes{Scope("global")}
+    {}
 
     void compile(energy::EnergyParser::ProgramContext *program);
-    Scope &globalScope() { return scopes.front(); }
-    Scope &currentScope() { return scopes.back(); }
+    // Scope &globalScope() { return scopes.front(); }
+    // Scope &currentScope() { return scopes.back(); }
 
    private:
+    ScopeManager scopeManager_;
     void saveModuleToFile(const std::string &filename);
 
     // void visitProg(energy::EnergyParser::ProgramContext* program);
@@ -62,7 +64,7 @@ class AstVisitor {
     std::unique_ptr<llvm::Module> module;
     std::unique_ptr<llvm::IRBuilder<>> builder;
 
-    std::deque<Scope> scopes;
+    // std::deque<Scope> scopes;
 
     llvm::Type *map_type_to_llvm_type(const std::string &type);
 };
