@@ -43,7 +43,7 @@ class AstVisitor {
 
     void visitArgumentList(energy::EnergyParser::ArgumentListContext *context);
 
-    void visitParameterList(
+    std::vector<llvm::Type*> visitParameterList(
         energy::EnergyParser::ParameterListContext *context);
 
     void visitBlock(energy::EnergyParser::BlockContext *context);

@@ -1,5 +1,7 @@
 #include "astvisitor.hpp"
 
+#include <algorithm>
+
 #include "spdlog/spdlog.h"
 
 llvm::Type *AstVisitor::map_type_to_llvm_type(const std::string &type) {
@@ -93,10 +95,13 @@ void AstVisitor::visitFunctionDeclaration(
     energy::EnergyParser::FunctionDeclarationContext *context) {
     spdlog::info(context->getText());
 
-    auto type = map_type_to_llvm_type(context->TYPENAME()->getText());
+    auto returnType = map_type_to_llvm_type(context->TYPENAME()->getText());
     auto name = context->id()->getText();
 
-    auto functionType = llvm::FunctionType::get(type, false);
+    std::vector<llvm::Type *> paramTypes =
+        visitParameterList(context->parameterList());
+
+    auto functionType = llvm::FunctionType::get(returnType, paramTypes, false);
     auto function = llvm::Function::Create(
         functionType, llvm::GlobalValue::LinkageTypes::ExternalLinkage, name,
         this->module.get());
@@ -147,7 +152,6 @@ void AstVisitor::visitReturnStatement(
  */
 void AstVisitor::visitVariableDeclaration(
     energy::EnergyParser::VariableDeclarationContext *context) {
-
     auto name = context->id()->getText();
     auto value = visitExpression(context->expression());
     spdlog::info("name: {}", name);
@@ -157,9 +161,23 @@ void AstVisitor::visitVariableDeclaration(
     return;
 }
 
-void AstVisitor::visitParameterList(
+/**
+ *  parameterList: '(' ')'
+ *               | '(' params+=typedValue(COMMA params+=typedValue)* ')';
+ */
+std::vector<llvm::Type *> AstVisitor::visitParameterList(
     energy::EnergyParser::ParameterListContext *context) {
     spdlog::info(context->getText());
+    // XXX
+    // convert TypedValueContext to Type and return
+    // std::transform?
+    std::vector<llvm::Type *> paramTypes;
+    for (auto typedValue : context->params) {
+        paramTypes.push_back(
+            map_type_to_llvm_type(typedValue->TYPENAME()->getText()));
+    }
+    // context->params;
+    return paramTypes;
 }
 
 void AstVisitor::visitFunctionCall(
@@ -174,7 +192,6 @@ void AstVisitor::visitFunctionCall(
  */
 llvm::Value *AstVisitor::visitExpression(
     energy::EnergyParser::ExpressionContext *context) {
-
     if (auto id = context->id()) {
         spdlog::info("found an identifier");
     } else if (auto literal = context->literal()) {
@@ -199,5 +216,6 @@ llvm::Value *AstVisitor::visitLiteral(
         auto value = STRING->getText();
         return builder->CreateGlobalStringPtr(value);
     }
+    spdlog::error("Couldn't find right literal type");
     return nullptr;
 }
