@@ -36,6 +36,7 @@ add_link_options("-lLLVM-15")
 add_executable(energyc
     main.cpp
     src/IR/astvisitor.cpp
+    src/IR/scopes.cpp
     src/parser/parser.cpp
     src/utils/cli.cpp
     src/utils/programreader.cpp

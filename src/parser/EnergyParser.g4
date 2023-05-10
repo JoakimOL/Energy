@@ -13,15 +13,17 @@ program: statement+ EOF;
 statement: functionDeclaration
          | functionDefinition
          | functionCall SEMICOLON
-         | variableDeclaration SEMICOLON;
+         | variableDeclaration SEMICOLON
+         | returnStatement SEMICOLON;
 
 functionDeclaration: id parameterList '->' TYPENAME;
 functionDefinition: id parameterList '=' block;
 functionCall: id argumentList;
-variableDeclaration: TYPENAME id '=' value;
+variableDeclaration: TYPENAME id '=' expression;
+returnStatement: RETURNKEYWORD expression;
 
 argumentList: '(' ')'
-            | '(' args+=value (COMMA args+=value)* ')';
+            | '(' args+=expression (COMMA args+=expression)* ')';
 
 parameterList: '(' ')'
              | '(' params+=typedValue(COMMA params+=typedValue)* ')';
@@ -34,7 +36,9 @@ block: statement
 
 typedValue: TYPENAME id;
 id: ID;
-value : id
-      | INT
-      | STRINGLITERAL;
+literal : INT
+        | STRINGLITERAL;
 
+expression: id
+          | literal
+          | '(' expression ')';

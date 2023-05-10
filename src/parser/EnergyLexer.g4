@@ -16,6 +16,7 @@ COMMA: ',';
 EQUALS: '=';
 STRINGLITERAL: '"' ~'"'* '"';
 SEMICOLON: ';';
+RETURNKEYWORD: 'return';
 
 INT: Digit+;
 Digit: [0-9];
