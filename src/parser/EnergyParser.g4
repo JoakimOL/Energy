@@ -13,13 +13,12 @@ program: toplevel+ EOF;
 toplevel: functionDeclaration
         | functionDefinition;
 
-statement: functionCall SEMICOLON
-         | variableDeclaration SEMICOLON
+statement: variableDeclaration SEMICOLON
          | returnStatement SEMICOLON
          | block;
 
 functionDeclaration: id parameterList '->' TYPENAME;
-functionDefinition: id parameterList '=' block | statement;
+functionDefinition: id parameterList '=' (block | statement);
 functionCall: id argumentList;
 variableDeclaration: TYPENAME id '=' expression;
 returnStatement: RETURNKEYWORD expression;
@@ -42,4 +41,5 @@ literal : INT
 
 expression: id
           | literal
-          | '(' expression ')';
+          | '(' expression ')'
+          | functionCall;

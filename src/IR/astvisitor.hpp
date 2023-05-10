@@ -40,7 +40,7 @@ class AstVisitor {
     void visitFunctionDefinition(
         energy::EnergyParser::FunctionDefinitionContext *context);
 
-    void visitFunctionCall(energy::EnergyParser::FunctionCallContext *context);
+    llvm::Value* visitFunctionCall(energy::EnergyParser::FunctionCallContext *context);
 
     void visitVariableDeclaration(
         energy::EnergyParser::VariableDeclarationContext *context);

@@ -71,10 +71,7 @@ void AstVisitor::visitToplevel(energy::EnergyParser::ToplevelContext *context){
  */
 void AstVisitor::visitStatement(
     energy::EnergyParser::StatementContext *context) {
-    if (auto funcCall = context->functionCall()) {
-        spdlog::info("found function call");
-        visitFunctionCall(funcCall);
-    } else if (auto varDec = context->variableDeclaration()) {
+    if (auto varDec = context->variableDeclaration()) {
         spdlog::info("found variableDeclaration");
         visitVariableDeclaration(varDec);
     } else if (auto returnStat = context->returnStatement()) {
@@ -127,7 +124,10 @@ void AstVisitor::visitFunctionDefinition(
     basicBlock->insertInto(function);
     builder->SetInsertPoint(basicBlock);
     // scopeManager_.pushScope(name);
-    visitBlock(context->block(), name);
+    if(auto block =  context->block())
+        visitBlock(context->block(), name);
+    else
+        visitStatement(context->statement());
 
     // builder->CreateRet(
     // llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ctx), 0, true));
@@ -181,9 +181,17 @@ std::vector<llvm::Type *> AstVisitor::visitParameterList(
     return paramTypes;
 }
 
-void AstVisitor::visitFunctionCall(
+/**
+ * functionCall: id argumentList;
+ */
+llvm::Value* AstVisitor::visitFunctionCall(
     energy::EnergyParser::FunctionCallContext *context) {
     spdlog::debug(context->getText());
+    auto name = context->id()->getText();
+    auto function = static_cast<llvm::Function *>(
+        scopeManager_.globalScope().getSymbol(name).value_or(nullptr));
+    auto inst = llvm::CallInst::Create(function->getFunctionType(), function);
+    return builder->CreateCall(function);
 }
 
 /**
@@ -207,6 +215,9 @@ llvm::Value *AstVisitor::visitExpression(
     } else if (auto expression = context->expression()) {
         spdlog::debug("found an expression");
         return visitExpression(expression);
+    } else if (auto funcCall = context->functionCall()) {
+        spdlog::info("found function call");
+        return visitFunctionCall(funcCall);
     }
     return nullptr;
 }
