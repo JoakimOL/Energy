@@ -32,6 +32,8 @@ class AstVisitor {
 
     void visitToplevel(energy::EnergyParser::ToplevelContext *context);
 
+    void visitTypeDefinition(energy::EnergyParser::TypeDefinitionContext *context);
+
     void visitStatement(energy::EnergyParser::StatementContext *context);
 
     void visitFunctionDeclaration(

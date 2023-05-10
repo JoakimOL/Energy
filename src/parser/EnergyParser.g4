@@ -11,7 +11,8 @@ options {
 program: toplevel+ EOF;
 
 toplevel: functionDeclaration
-        | functionDefinition;
+        | functionDefinition
+        | typeDefinition;
 
 statement: functionCall SEMICOLON
          | variableDeclaration SEMICOLON
@@ -23,6 +24,8 @@ functionDefinition: id parameterList '=' block | statement;
 functionCall: id argumentList;
 variableDeclaration: TYPENAME id '=' expression;
 returnStatement: RETURNKEYWORD expression;
+
+typeDefinition: NEWTYPE id '=' parameterList;
 
 argumentList: '(' ')'
             | '(' args+=expression (COMMA args+=expression)* ')';

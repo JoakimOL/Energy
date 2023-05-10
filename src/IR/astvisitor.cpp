@@ -1,6 +1,7 @@
 #include "astvisitor.hpp"
 
 #include <algorithm>
+#include <llvm/ADT/ArrayRef.h>
 
 #include "spdlog/spdlog.h"
 
@@ -57,7 +58,31 @@ void AstVisitor::visitToplevel(energy::EnergyParser::ToplevelContext *context){
     } else if (auto funcDef = context->functionDefinition()) {
         spdlog::info("found function definition");
         visitFunctionDefinition(funcDef);
+    } else if (auto typeDef = context->typeDefinition()) {
+        spdlog::info("found type definition");
+        visitTypeDefinition(typeDef);
     }
+}
+
+
+/**
+ * typeDefinition: NEWTYPE id '=' parameterList;
+ */
+void AstVisitor::visitTypeDefinition(energy::EnergyParser::TypeDefinitionContext *context){
+    auto typeName = context->id()->getText();
+    spdlog::info("new type name: {}", typeName);
+
+    std::vector<llvm::Type *> fields;
+    for (auto typedValue : context->parameterList()->params) {
+        fields.push_back(
+            map_type_to_llvm_type(typedValue->TYPENAME()->getText()));
+    }
+    llvm::StructType* newtype = llvm::StructType::create(module->getContext(), fields, typeName, false);
+    // newtype->setBody(llvm::ArrayRef<llvm::Type *>(llvm::Type::getInt32Ty(*ctx)));
+
+    // auto newtype = llvm::StructType::create(fields);
+    // builder->CreateAlloca(newtype, nullptr, typeName);
+
 }
 
 /**
