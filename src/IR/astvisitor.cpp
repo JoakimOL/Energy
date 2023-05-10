@@ -6,13 +6,13 @@
 
 llvm::Type *AstVisitor::map_type_to_llvm_type(const std::string &type) {
     if (type == "i8") {
-        spdlog::info("returning int type");
+        spdlog::debug("returning int type");
         return llvm::Type::getInt32Ty(*ctx);
     } else if (type == "string") {
-        spdlog::info("returning string type (i8 array)");
+        spdlog::debug("returning string type (i8 array)");
         return llvm::Type::getInt8PtrTy(*ctx);
     }
-    spdlog::info("couldn't find type! returning");
+    spdlog::debug("couldn't find type! returning");
     exit(1);
 }
 
@@ -93,7 +93,7 @@ void AstVisitor::visitStatement(
  */
 void AstVisitor::visitFunctionDeclaration(
     energy::EnergyParser::FunctionDeclarationContext *context) {
-    spdlog::info(context->getText());
+    spdlog::debug(context->getText());
 
     auto returnType = map_type_to_llvm_type(context->TYPENAME()->getText());
     auto name = context->id()->getText();
@@ -114,7 +114,7 @@ void AstVisitor::visitFunctionDeclaration(
  */
 void AstVisitor::visitFunctionDefinition(
     energy::EnergyParser::FunctionDefinitionContext *context) {
-    spdlog::info(context->getText());
+    spdlog::debug(context->getText());
 
     auto basicBlock = llvm::BasicBlock::Create(builder->getContext());
     auto name = context->id()->getText();
@@ -131,7 +131,7 @@ void AstVisitor::visitFunctionDefinition(
 }
 
 void AstVisitor::visitBlock(energy::EnergyParser::BlockContext *context) {
-    spdlog::info(context->getText());
+    spdlog::debug(context->getText());
     for (const auto &statement : context->statement())
         visitStatement(statement);
 }
@@ -141,7 +141,7 @@ void AstVisitor::visitBlock(energy::EnergyParser::BlockContext *context) {
  */
 void AstVisitor::visitReturnStatement(
     energy::EnergyParser::ReturnStatementContext *context) {
-    spdlog::info(context->getText());
+    spdlog::debug(context->getText());
     auto value = visitExpression(context->expression());
     builder->CreateRet(value);
 }
@@ -166,22 +166,18 @@ void AstVisitor::visitVariableDeclaration(
  */
 std::vector<llvm::Type *> AstVisitor::visitParameterList(
     energy::EnergyParser::ParameterListContext *context) {
-    spdlog::info(context->getText());
-    // XXX
-    // convert TypedValueContext to Type and return
-    // std::transform?
+    spdlog::debug(context->getText());
     std::vector<llvm::Type *> paramTypes;
     for (auto typedValue : context->params) {
         paramTypes.push_back(
             map_type_to_llvm_type(typedValue->TYPENAME()->getText()));
     }
-    // context->params;
     return paramTypes;
 }
 
 void AstVisitor::visitFunctionCall(
     energy::EnergyParser::FunctionCallContext *context) {
-    spdlog::info(context->getText());
+    spdlog::debug(context->getText());
 }
 
 /**
@@ -198,10 +194,10 @@ llvm::Value *AstVisitor::visitExpression(
         auto loadinst = builder->CreateLoad(value->getAllocatedType(), value, name);
         return loadinst;
     } else if (auto literal = context->literal()) {
-        spdlog::info("found a literal");
+        spdlog::debug("found a literal");
         return visitLiteral(literal);
     } else if (auto expression = context->expression()) {
-        spdlog::info("found an expression");
+        spdlog::debug("found an expression");
         return visitExpression(expression);
     }
     return nullptr;
@@ -209,11 +205,11 @@ llvm::Value *AstVisitor::visitExpression(
 
 llvm::Value *AstVisitor::visitLiteral(
     energy::EnergyParser::LiteralContext *context) {
-    spdlog::info(context->getText());
+    // spdlog::debug(context->getText());
     if (auto INT = context->INT()) {
         int value;
         llvm::StringRef(INT->getText()).getAsInteger(/*radix=*/10, value);
-        spdlog::info("found an int literal: {}", value);
+        spdlog::debug("found an int literal: {}", value);
         return llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ctx), value);
     } else if (auto STRING = context->STRINGLITERAL()) {
         auto value = STRING->getText();
