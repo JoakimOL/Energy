@@ -14,20 +14,15 @@ class AstVisitor {
     AstVisitor()
         : ctx(std::make_unique<llvm::LLVMContext>()),
           module(std::make_unique<llvm::Module>("EnergyLLVM", *ctx)),
-          builder(std::make_unique<llvm::IRBuilder<>>(*ctx))
-    // scopes{Scope("global")}
-    {}
+          builder(std::make_unique<llvm::IRBuilder<>>(*ctx)) {}
 
     void compile(energy::EnergyParser::ProgramContext *program);
-    llvm::Function* currentFunction; // need function in order to correctly place basic blocks
-    // Scope &globalScope() { return scopes.front(); }
-    // Scope &currentScope() { return scopes.back(); }
+    llvm::Function *currentFunction;  // need function in order to correctly
+                                      // place basic blocks
 
    private:
     ScopeManager scopeManager_;
     void saveModuleToFile(const std::string &filename);
-
-    // void visitProg(energy::EnergyParser::ProgramContext* program);
 
     void visitProgram(energy::EnergyParser::ProgramContext *context);
 
@@ -41,7 +36,8 @@ class AstVisitor {
     void visitFunctionDefinition(
         energy::EnergyParser::FunctionDefinitionContext *context);
 
-    llvm::Value* visitFunctionCall(energy::EnergyParser::FunctionCallContext *context);
+    llvm::Value *visitFunctionCall(
+        energy::EnergyParser::FunctionCallContext *context);
 
     void visitVariableDeclaration(
         energy::EnergyParser::VariableDeclarationContext *context);
@@ -51,7 +47,8 @@ class AstVisitor {
     std::vector<llvm::Type *> visitParameterList(
         energy::EnergyParser::ParameterListContext *context);
 
-    void visitBlock(energy::EnergyParser::BlockContext *context, const std::string& name="");
+    void visitBlock(energy::EnergyParser::BlockContext *context,
+                    const std::string &name = "");
 
     void visitTypedValue(energy::EnergyParser::TypedValueContext *context);
 
@@ -63,13 +60,11 @@ class AstVisitor {
     llvm::Value *visitExpression(
         energy::EnergyParser::ExpressionContext *context);
 
-    void visitIfStatement(energy::EnergyParser::IfStatementContext* context);
+    void visitIfStatement(energy::EnergyParser::IfStatementContext *context);
 
     std::unique_ptr<llvm::LLVMContext> ctx;
     std::unique_ptr<llvm::Module> module;
     std::unique_ptr<llvm::IRBuilder<>> builder;
-
-    // std::deque<Scope> scopes;
 
     llvm::Type *map_type_to_llvm_type(const std::string &type);
 };

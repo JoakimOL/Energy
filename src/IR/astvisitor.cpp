@@ -44,13 +44,12 @@ void AstVisitor::saveModuleToFile(const std::string &filename) {
  *
  */
 void AstVisitor::visitProgram(energy::EnergyParser::ProgramContext *program) {
-    for (const auto &statement : program->toplevel())
-        visitToplevel(statement);
+    for (const auto &statement : program->toplevel()) visitToplevel(statement);
 
     return;
 }
 
-void AstVisitor::visitToplevel(energy::EnergyParser::ToplevelContext *context){
+void AstVisitor::visitToplevel(energy::EnergyParser::ToplevelContext *context) {
     if (auto funcDec = context->functionDeclaration()) {
         spdlog::info("found function declaration");
         visitFunctionDeclaration(funcDec);
@@ -80,7 +79,7 @@ void AstVisitor::visitStatement(
     } else if (auto block = context->block()) {
         spdlog::info("found block");
         visitBlock(block);
-    } else if(auto ifstat = context->ifStatement()) {
+    } else if (auto ifstat = context->ifStatement()) {
         spdlog::info("found if statement");
         visitIfStatement(ifstat);
     } else {
@@ -128,7 +127,7 @@ void AstVisitor::visitFunctionDefinition(
     basicBlock->insertInto(function);
     builder->SetInsertPoint(basicBlock);
     // scopeManager_.pushScope(name);
-    if(auto block =  context->block())
+    if (auto block = context->block())
         visitBlock(context->block(), name);
     else
         visitStatement(context->statement());
@@ -137,7 +136,8 @@ void AstVisitor::visitFunctionDefinition(
     // llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ctx), 0, true));
 }
 
-void AstVisitor::visitBlock(energy::EnergyParser::BlockContext *context, const std::string& name) {
+void AstVisitor::visitBlock(energy::EnergyParser::BlockContext *context,
+                            const std::string &name) {
     spdlog::info("entering block. depth: {}", scopeManager_.depth());
     scopeManager_.pushScope(name);
     for (const auto &statement : context->statement())
@@ -188,7 +188,7 @@ std::vector<llvm::Type *> AstVisitor::visitParameterList(
 /**
  * functionCall: id argumentList;
  */
-llvm::Value* AstVisitor::visitFunctionCall(
+llvm::Value *AstVisitor::visitFunctionCall(
     energy::EnergyParser::FunctionCallContext *context) {
     spdlog::debug(context->getText());
     auto name = context->id()->getText();
@@ -210,10 +210,11 @@ llvm::Value *AstVisitor::visitExpression(
     if (auto id = context->id()) {
         auto name = id->getText();
         spdlog::info("found an identifier expression. name: {}", name);
-        auto *value = static_cast<llvm::AllocaInst *>(scopeManager_.getSymbol(name).value_or(nullptr));
-        if(!value)
-            spdlog::error("identifier not found");
-        auto loadinst = builder->CreateLoad(value->getAllocatedType(), value, name);
+        auto *value = static_cast<llvm::AllocaInst *>(
+            scopeManager_.getSymbol(name).value_or(nullptr));
+        if (!value) spdlog::error("identifier not found");
+        auto loadinst =
+            builder->CreateLoad(value->getAllocatedType(), value, name);
         return loadinst;
     } else if (auto literal = context->literal()) {
         spdlog::debug("found a literal");
@@ -221,18 +222,18 @@ llvm::Value *AstVisitor::visitExpression(
     } else if (auto binopexpression = context->binop()) {
         auto LHS = visitExpression(context->expression(0));
         auto RHS = visitExpression(context->expression(1));
-        if(binopexpression->LESSTHAN()){
-            return builder->CreateICmpSLT(LHS,RHS);
-        } else if(binopexpression->GREATERTHAN()){
-            return builder->CreateICmpSGE(LHS,RHS);
-        } else if(binopexpression->EQUALS()){
-            return builder->CreateICmpEQ(LHS,RHS);
-        } else if(binopexpression->PLUS()){
-            return builder->CreateAdd(LHS,RHS);
-        } else if(binopexpression->MINUS()){
-            return builder->CreateSub(LHS,RHS);
-        } else if(binopexpression->MUL()){
-            return builder->CreateMul(LHS,RHS);
+        if (binopexpression->LESSTHAN()) {
+            return builder->CreateICmpSLT(LHS, RHS);
+        } else if (binopexpression->GREATERTHAN()) {
+            return builder->CreateICmpSGE(LHS, RHS);
+        } else if (binopexpression->EQUALS()) {
+            return builder->CreateICmpEQ(LHS, RHS);
+        } else if (binopexpression->PLUS()) {
+            return builder->CreateAdd(LHS, RHS);
+        } else if (binopexpression->MINUS()) {
+            return builder->CreateSub(LHS, RHS);
+        } else if (binopexpression->MUL()) {
+            return builder->CreateMul(LHS, RHS);
         }
     } else if (auto expression = context->expression(0)) {
         spdlog::debug("found an expression");
@@ -263,8 +264,9 @@ llvm::Value *AstVisitor::visitLiteral(
 /*
  * ifStatement: IFKEYWORD expression statement;
  */
-void AstVisitor::visitIfStatement(energy::EnergyParser::IfStatementContext* context){
-    llvm::Value* expressionResult = visitExpression(context->expression());
+void AstVisitor::visitIfStatement(
+    energy::EnergyParser::IfStatementContext *context) {
+    llvm::Value *expressionResult = visitExpression(context->expression());
     auto current_block = builder->GetInsertBlock();
     auto type = expressionResult->getType();
 
@@ -277,5 +279,4 @@ void AstVisitor::visitIfStatement(energy::EnergyParser::IfStatementContext* cont
     builder->SetInsertPoint(trueBasicBlock);
     visitStatement(context->statement());
     builder->SetInsertPoint(afterBasicBlock);
-
 }
