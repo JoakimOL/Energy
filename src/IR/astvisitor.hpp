@@ -19,6 +19,7 @@ class AstVisitor {
     {}
 
     void compile(energy::EnergyParser::ProgramContext *program);
+    llvm::Function* currentFunction; // need function in order to correctly place basic blocks
     // Scope &globalScope() { return scopes.front(); }
     // Scope &currentScope() { return scopes.back(); }
 
@@ -61,6 +62,8 @@ class AstVisitor {
 
     llvm::Value *visitExpression(
         energy::EnergyParser::ExpressionContext *context);
+
+    void visitIfStatement(energy::EnergyParser::IfStatementContext* context);
 
     std::unique_ptr<llvm::LLVMContext> ctx;
     std::unique_ptr<llvm::Module> module;

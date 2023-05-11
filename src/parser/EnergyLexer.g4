@@ -13,7 +13,8 @@ PARENCLOSE: ')';
 BLOCKOPEN: '{';
 BLOCKCLOSE: '}';
 COMMA: ',';
-EQUALS: '=';
+EQUALS: '==';
+ASSIGNMENT: '=';
 LESSTHAN: '<';
 GREATERTHAN: '>';
 PLUS: '+';
@@ -22,6 +23,7 @@ MUL: '*';
 STRINGLITERAL: '"' ~'"'* '"';
 SEMICOLON: ';';
 RETURNKEYWORD: 'return';
+IFKEYWORD: 'if';
 
 INT: Digit+;
 Digit: [0-9];

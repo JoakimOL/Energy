@@ -80,6 +80,9 @@ void AstVisitor::visitStatement(
     } else if (auto block = context->block()) {
         spdlog::info("found block");
         visitBlock(block);
+    } else if(auto ifstat = context->ifStatement()) {
+        spdlog::info("found if statement");
+        visitIfStatement(ifstat);
     } else {
         spdlog::info("i dunno what this is lol bai");
         return;
@@ -120,6 +123,7 @@ void AstVisitor::visitFunctionDefinition(
     auto name = context->id()->getText();
     auto function = static_cast<llvm::Function *>(
         scopeManager_.globalScope().getSymbol(name).value_or(nullptr));
+    currentFunction = function;
 
     basicBlock->insertInto(function);
     builder->SetInsertPoint(basicBlock);
@@ -254,4 +258,24 @@ llvm::Value *AstVisitor::visitLiteral(
     }
     spdlog::error("Couldn't find right literal type");
     return nullptr;
+}
+
+/*
+ * ifStatement: IFKEYWORD expression statement;
+ */
+void AstVisitor::visitIfStatement(energy::EnergyParser::IfStatementContext* context){
+    llvm::Value* expressionResult = visitExpression(context->expression());
+    auto current_block = builder->GetInsertBlock();
+    auto type = expressionResult->getType();
+
+    auto trueBasicBlock = llvm::BasicBlock::Create(builder->getContext());
+    auto afterBasicBlock = llvm::BasicBlock::Create(builder->getContext());
+
+    trueBasicBlock->insertInto(currentFunction);
+    afterBasicBlock->insertInto(currentFunction);
+    builder->CreateCondBr(expressionResult, trueBasicBlock, afterBasicBlock);
+    builder->SetInsertPoint(trueBasicBlock);
+    visitStatement(context->statement());
+    builder->SetInsertPoint(afterBasicBlock);
+
 }

@@ -15,12 +15,14 @@ toplevel: functionDeclaration
 
 statement: variableDeclaration SEMICOLON
          | returnStatement SEMICOLON
+         | ifStatement
          | block;
 
+ifStatement: IFKEYWORD expression statement;
 functionDeclaration: id parameterList '->' TYPENAME;
-functionDefinition: id parameterList '=' (block | statement);
+functionDefinition: id parameterList ASSIGNMENT (block | statement);
 functionCall: id argumentList;
-variableDeclaration: TYPENAME id '=' expression;
+variableDeclaration: TYPENAME id ASSIGNMENT expression;
 returnStatement: RETURNKEYWORD expression;
 
 argumentList: '(' ')'
