@@ -39,7 +39,15 @@ id: ID;
 literal : INT
         | STRINGLITERAL;
 
+binop : EQUALS
+      | LESSTHAN
+      | PLUS
+      | MINUS
+      | MUL
+      | GREATERTHAN;
+
 expression: id
           | literal
           | '(' expression ')'
+          | expression binop expression
           | functionCall;

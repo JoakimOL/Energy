@@ -197,7 +197,9 @@ llvm::Value* AstVisitor::visitFunctionCall(
 /**
  * expression: id
  *           | literal
- *           | '(' expression ')';
+ *           | expression binop expression
+ *           | '(' expression ')'
+ *           | functionCall;
  */
 llvm::Value *AstVisitor::visitExpression(
     energy::EnergyParser::ExpressionContext *context) {
@@ -212,7 +214,23 @@ llvm::Value *AstVisitor::visitExpression(
     } else if (auto literal = context->literal()) {
         spdlog::debug("found a literal");
         return visitLiteral(literal);
-    } else if (auto expression = context->expression()) {
+    } else if (auto binopexpression = context->binop()) {
+        auto LHS = visitExpression(context->expression(0));
+        auto RHS = visitExpression(context->expression(1));
+        if(binopexpression->LESSTHAN()){
+            return builder->CreateICmpSLT(LHS,RHS);
+        } else if(binopexpression->GREATERTHAN()){
+            return builder->CreateICmpSGE(LHS,RHS);
+        } else if(binopexpression->EQUALS()){
+            return builder->CreateICmpEQ(LHS,RHS);
+        } else if(binopexpression->PLUS()){
+            return builder->CreateAdd(LHS,RHS);
+        } else if(binopexpression->MINUS()){
+            return builder->CreateSub(LHS,RHS);
+        } else if(binopexpression->MUL()){
+            return builder->CreateMul(LHS,RHS);
+        }
+    } else if (auto expression = context->expression(0)) {
         spdlog::debug("found an expression");
         return visitExpression(expression);
     } else if (auto funcCall = context->functionCall()) {
