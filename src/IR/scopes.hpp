@@ -5,6 +5,7 @@
 #include <optional>
 #include <string>
 
+#include "spdlog/spdlog.h"
 #include "llvm/IR/Value.h"
 
 class Scope {
@@ -13,6 +14,15 @@ class Scope {
     void insertSymbol(const std::string& identifier, llvm::Value* value);
     std::optional<llvm::Value*> getSymbol(const std::string& identifier);
     size_t size() const { return localSymbolTable.size(); };
+    bool named() const {
+        return !name.empty();
+    }
+    void printAllSymbols(){
+        spdlog::info("printing all identifiers in {}", name);
+        for (const auto& [key, value] : localSymbolTable){
+            spdlog::info(key);
+        }
+    }
 
    private:
     const std::string name;
@@ -26,6 +36,14 @@ class ScopeManager {
         scopes.push_front(Scope(scopeName));
         return currentScope();
     };
+    Scope& pushScope(Scope scope) {
+        spdlog::info("size before pushing {}", scopes.size());
+        scopes.push_front(scope);
+        return currentScope();
+    };
+    void printAllIdentifiersInLocal() {
+        currentScope().printAllSymbols();
+    }
     void popScope() { scopes.pop_front(); }
     size_t depth() { return scopes.size(); }
     Scope& globalScope() { return globalScope_; }

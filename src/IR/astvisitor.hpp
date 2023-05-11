@@ -14,7 +14,13 @@ class AstVisitor {
     AstVisitor()
         : ctx(std::make_unique<llvm::LLVMContext>()),
           module(std::make_unique<llvm::Module>("EnergyLLVM", *ctx)),
-          builder(std::make_unique<llvm::IRBuilder<>>(*ctx)) {}
+          builder(std::make_unique<llvm::IRBuilder<>>(*ctx)) {
+              auto bytePtrTy = builder->getInt8Ty()->getPointerTo();
+              module->getOrInsertFunction("printf",
+                      llvm::FunctionType::get(builder->getInt32Ty(), bytePtrTy, true));
+              auto printf = module->getFunction("printf");
+              scopeManager_.globalScope().insertSymbol("printf", printf);
+          }
 
     void compile(energy::EnergyParser::ProgramContext *program);
     llvm::Function *currentFunction;  // need function in order to correctly
@@ -48,7 +54,10 @@ class AstVisitor {
         energy::EnergyParser::ParameterListContext *context);
 
     void visitBlock(energy::EnergyParser::BlockContext *context,
-                    const std::string &name = "");
+                    Scope scope);
+
+    void visitBlock(energy::EnergyParser::BlockContext *context,
+                    const std::string& name="");
 
     void visitTypedValue(energy::EnergyParser::TypedValueContext *context);
 

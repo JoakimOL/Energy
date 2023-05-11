@@ -116,7 +116,7 @@ void AstVisitor::visitFunctionDeclaration(
  */
 void AstVisitor::visitFunctionDefinition(
     energy::EnergyParser::FunctionDefinitionContext *context) {
-    spdlog::debug(context->getText());
+    spdlog::info(context->getText());
 
     auto basicBlock = llvm::BasicBlock::Create(builder->getContext());
     auto name = context->id()->getText();
@@ -126,9 +126,28 @@ void AstVisitor::visitFunctionDefinition(
 
     basicBlock->insertInto(function);
     builder->SetInsertPoint(basicBlock);
-    // scopeManager_.pushScope(name);
+
+    Scope scope(name);
+
+    // XXX
+    // what the actual shit is this.
+    // I have less than 1 hour left of work btw
+    auto parametercontexts = context->parameterList()->params;
+    std::vector<std::pair<std::string, llvm::Value *>> parameters;
+    int i = 0;
+    for(auto it = function->arg_begin(); it != function->arg_end(); it++){
+        // parameters.push_back(std::make_pair(parametercontexts[i]->id()->getText(), static_cast<llvm::Value*>(it)));
+        if(it == nullptr)
+            spdlog::warn("it is nullptr!");
+        spdlog::warn(parametercontexts[i]->id()->getText());
+        auto param = builder->CreateAlloca(llvm::Type::getInt32Ty(*ctx), nullptr, parametercontexts[i]->id()->getText());
+        builder->CreateStore(it, param);
+        scope.insertSymbol(parametercontexts[i]->id()->getText(), param);
+        i++;
+    }
+
     if (auto block = context->block())
-        visitBlock(context->block(), name);
+        visitBlock(context->block(), scope);
     else
         visitStatement(context->statement());
 
@@ -137,9 +156,17 @@ void AstVisitor::visitFunctionDefinition(
 }
 
 void AstVisitor::visitBlock(energy::EnergyParser::BlockContext *context,
-                            const std::string &name) {
+                            const std::string& name) {
+    Scope scope(name);
+    visitBlock(context, scope);
+}
+
+void AstVisitor::visitBlock(energy::EnergyParser::BlockContext *context,
+                            Scope scope) {
+    scopeManager_.pushScope(scope);
+
     spdlog::info("entering block. depth: {}", scopeManager_.depth());
-    scopeManager_.pushScope(name);
+    // scopeManager_.pushScope(name);
     for (const auto &statement : context->statement())
         visitStatement(statement);
     scopeManager_.popScope();
@@ -193,9 +220,17 @@ llvm::Value *AstVisitor::visitFunctionCall(
     spdlog::debug(context->getText());
     auto name = context->id()->getText();
     auto function = static_cast<llvm::Function *>(
-        scopeManager_.globalScope().getSymbol(name).value_or(nullptr));
+        scopeManager_.globalScope().getSymbol(name).value());
     auto inst = llvm::CallInst::Create(function->getFunctionType(), function);
-    return builder->CreateCall(function);
+
+    auto args = context->argumentList()->args;
+
+    std::vector<llvm::Value* > llvmargs;
+    for(auto arg: args){
+        llvmargs.push_back(visitExpression(arg));
+    }
+
+    return builder->CreateCall(function, llvmargs);
 }
 
 /**
@@ -210,6 +245,7 @@ llvm::Value *AstVisitor::visitExpression(
     if (auto id = context->id()) {
         auto name = id->getText();
         spdlog::info("found an identifier expression. name: {}", name);
+        scopeManager_.printAllIdentifiersInLocal();
         auto *value = static_cast<llvm::AllocaInst *>(
             scopeManager_.getSymbol(name).value_or(nullptr));
         if (!value) spdlog::error("identifier not found");
