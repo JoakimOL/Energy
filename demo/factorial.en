@@ -1,0 +1,14 @@
+factorial(int n) -> int
+
+main() -> int
+main() = {
+    int result = factorial(5);
+    int written = printf("%d", result);
+    return 0;
+}
+
+factorial(int n) = {
+    if( n == 1 ) return 1;
+    return n * factorial(n - 1);
+}
+

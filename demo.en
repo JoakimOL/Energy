@@ -1,8 +1,0 @@
-main(i8 argc) -> i8
-main(i8 argc) = {
-    i8 number = 28;
-    {
-        i8 number = 10;
-    }
-    return number;
-}

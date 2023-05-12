@@ -5,7 +5,7 @@
 #include "spdlog/spdlog.h"
 
 llvm::Type *AstVisitor::map_type_to_llvm_type(const std::string &type) {
-    if (type == "i8") {
+    if (type == "int") {
         spdlog::debug("returning int type");
         return llvm::Type::getInt32Ty(*ctx);
     } else if (type == "string") {

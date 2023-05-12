@@ -4,7 +4,7 @@ lexer grammar EnergyLexer;
 #pragma GCC diagnostic ignored "-Wattributes"
 }
 
-TYPENAME: 'i8'
+TYPENAME: 'int'
         | 'string'
         | '[' TYPENAME ']';
 RETURNARROW: '->';

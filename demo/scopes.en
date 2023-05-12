@@ -1,0 +1,12 @@
+main() -> int
+main() = {
+    int variable = 5;
+    {
+        int variable = 9;
+        // int print = printf("%d", variable);
+    }
+
+    int print = printf("%d", variable);
+
+    return 0;
+}
