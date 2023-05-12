@@ -16,10 +16,10 @@ llvm::Type *AstVisitor::map_type_to_llvm_type(const std::string &type) {
     exit(1);
 }
 
-void AstVisitor::compile(energy::EnergyParser::ProgramContext *program) {
+void AstVisitor::compile(energy::EnergyParser::ProgramContext *program, const std::string& outfile) {
     this->visitProgram(program);
 
-    saveModuleToFile("./out.ll");
+    saveModuleToFile(outfile);
 }
 
 void AstVisitor::saveModuleToFile(const std::string &filename) {

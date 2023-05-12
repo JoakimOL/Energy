@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
     else
     {
         if(argParser.hasArg("-f")){
-            auto filename = argParser.getArgValue("-f","");
+            auto filename = argParser.getArgValue("-f").value_or("");
             if(filename.empty())
             {
                 spdlog::error("Invalid filename! Exiting");
@@ -40,9 +40,11 @@ int main(int argc, char** argv) {
     parser.validate_lex();
     MaybeAST ast = parser.parse();
 
+    auto outfile = argParser.getArgValue("-o");
+
     if (ast.has_value()) {
         parser.printAst();
         AstVisitor compiler;
-        compiler.compile(parser.ast.value());
+        compiler.compile(parser.ast.value(), outfile.value_or("./out.ll"));
     }
 }

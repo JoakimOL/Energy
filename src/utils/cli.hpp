@@ -2,14 +2,14 @@
 #define CLI_HPP
 
 #include <string>
+#include <optional>
 #include <vector>
 
 class ArgParser {
    public:
     ArgParser(int argc, char** argv);
     bool hasArg(const std::string& arg) const;
-    std::string getArgValue(const std::string& arg,
-                            const std::string& def = "") const;
+    std::optional<std::string> getArgValue(const std::string& arg) const;
 
    private:
     std::string executableName;

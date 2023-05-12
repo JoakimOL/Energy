@@ -22,7 +22,7 @@ class AstVisitor {
               scopeManager_.globalScope().insertSymbol("printf", printf);
           }
 
-    void compile(energy::EnergyParser::ProgramContext *program);
+    void compile(energy::EnergyParser::ProgramContext *program, const std::string & outfile="./out.ll");
     llvm::Function *currentFunction;  // need function in order to correctly
                                       // place basic blocks
 
