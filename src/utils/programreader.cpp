@@ -8,7 +8,7 @@
 void ProgramReader::readFromFile(const std::string& filename) {
     std::ifstream file{filename};
     if (!file.is_open()) {
-        spdlog::info("File opening failed! Does it exist?");
+        spdlog::error("File opening failed! Does it exist?");
         return;
     }
     std::ostringstream ss;

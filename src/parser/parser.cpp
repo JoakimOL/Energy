@@ -9,7 +9,7 @@ ParserWrapper::ParserWrapper(std::string_view program)
 
 bool ParserWrapper::validate_lex() {
     auto num_errors = lexer.getNumberOfSyntaxErrors();
-    spdlog::info("lexer errors: {}", num_errors);
+    spdlog::debug("lexer errors: {}", num_errors);
     if (num_errors) {
         spdlog::warn("Lexer error! Ignoring and attempting to go on");
         return false;
@@ -20,7 +20,7 @@ bool ParserWrapper::validate_lex() {
 MaybeAST ParserWrapper::parse() {
     energy::EnergyParser::ProgramContext* res = parser.program();
     auto num_errors = parser.getNumberOfSyntaxErrors();
-    spdlog::info("parser errors: {}", num_errors);
+    spdlog::debug("parser errors: {}", num_errors);
     if (num_errors) {
         spdlog::warn("Syntax error! Go fuck yourself!");
         ast = std::nullopt;
@@ -30,6 +30,6 @@ MaybeAST ParserWrapper::parse() {
 }
 
 void ParserWrapper::printAst() {
-    if (ast.has_value()) spdlog::info((*ast)->toStringTree(&parser));
+    if (ast.has_value()) spdlog::debug((*ast)->toStringTree(&parser));
     return;
 }

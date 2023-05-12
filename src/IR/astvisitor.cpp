@@ -51,10 +51,10 @@ void AstVisitor::visitProgram(energy::EnergyParser::ProgramContext *program) {
 
 void AstVisitor::visitToplevel(energy::EnergyParser::ToplevelContext *context) {
     if (auto funcDec = context->functionDeclaration()) {
-        spdlog::info("found function declaration");
+        spdlog::debug("found function declaration");
         visitFunctionDeclaration(funcDec);
     } else if (auto funcDef = context->functionDefinition()) {
-        spdlog::info("found function definition");
+        spdlog::debug("found function definition");
         visitFunctionDefinition(funcDef);
     }
 }
@@ -71,19 +71,19 @@ void AstVisitor::visitToplevel(energy::EnergyParser::ToplevelContext *context) {
 void AstVisitor::visitStatement(
     energy::EnergyParser::StatementContext *context) {
     if (auto varDec = context->variableDeclaration()) {
-        spdlog::info("found variableDeclaration");
+        spdlog::debug("found variableDeclaration");
         visitVariableDeclaration(varDec);
     } else if (auto returnStat = context->returnStatement()) {
-        spdlog::info("found return statement");
+        spdlog::debug("found return statement");
         visitReturnStatement(returnStat);
     } else if (auto block = context->block()) {
-        spdlog::info("found block");
+        spdlog::debug("found block");
         visitBlock(block);
     } else if (auto ifstat = context->ifStatement()) {
-        spdlog::info("found if statement");
+        spdlog::debug("found if statement");
         visitIfStatement(ifstat);
     } else {
-        spdlog::info("i dunno what this is lol bai");
+        spdlog::debug("i dunno what this is lol bai");
         return;
     }
     return;
@@ -116,7 +116,7 @@ void AstVisitor::visitFunctionDeclaration(
  */
 void AstVisitor::visitFunctionDefinition(
     energy::EnergyParser::FunctionDefinitionContext *context) {
-    spdlog::info(context->getText());
+    spdlog::debug(context->getText());
 
     auto basicBlock = llvm::BasicBlock::Create(builder->getContext());
     auto name = context->id()->getText();
@@ -136,10 +136,8 @@ void AstVisitor::visitFunctionDefinition(
     std::vector<std::pair<std::string, llvm::Value *>> parameters;
     int i = 0;
     for(auto it = function->arg_begin(); it != function->arg_end(); it++){
-        // parameters.push_back(std::make_pair(parametercontexts[i]->id()->getText(), static_cast<llvm::Value*>(it)));
         if(it == nullptr)
             spdlog::warn("it is nullptr!");
-        spdlog::warn(parametercontexts[i]->id()->getText());
         auto param = builder->CreateAlloca(llvm::Type::getInt32Ty(*ctx), nullptr, parametercontexts[i]->id()->getText());
         builder->CreateStore(it, param);
         scope.insertSymbol(parametercontexts[i]->id()->getText(), param);
@@ -150,9 +148,6 @@ void AstVisitor::visitFunctionDefinition(
         visitBlock(context->block(), scope);
     else
         visitStatement(context->statement());
-
-    // builder->CreateRet(
-    // llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ctx), 0, true));
 }
 
 void AstVisitor::visitBlock(energy::EnergyParser::BlockContext *context,
@@ -165,12 +160,12 @@ void AstVisitor::visitBlock(energy::EnergyParser::BlockContext *context,
                             Scope scope) {
     scopeManager_.pushScope(scope);
 
-    spdlog::info("entering block. depth: {}", scopeManager_.depth());
+    spdlog::debug("entering block. depth: {}", scopeManager_.depth());
     // scopeManager_.pushScope(name);
     for (const auto &statement : context->statement())
         visitStatement(statement);
     scopeManager_.popScope();
-    spdlog::info("exiting block");
+    spdlog::debug("exiting block");
 }
 
 /**
@@ -244,8 +239,8 @@ llvm::Value *AstVisitor::visitExpression(
     energy::EnergyParser::ExpressionContext *context) {
     if (auto id = context->id()) {
         auto name = id->getText();
-        spdlog::info("found an identifier expression. name: {}", name);
-        scopeManager_.printAllIdentifiersInLocal();
+        spdlog::debug("found an identifier expression. name: {}", name);
+        // scopeManager_.printAllIdentifiersInLocal();
         auto *value = static_cast<llvm::AllocaInst *>(
             scopeManager_.getSymbol(name).value_or(nullptr));
         if (!value) spdlog::error("identifier not found");
@@ -275,7 +270,7 @@ llvm::Value *AstVisitor::visitExpression(
         spdlog::debug("found an expression");
         return visitExpression(expression);
     } else if (auto funcCall = context->functionCall()) {
-        spdlog::info("found function call");
+        spdlog::debug("found function call");
         return visitFunctionCall(funcCall);
     }
     return nullptr;

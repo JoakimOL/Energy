@@ -3,7 +3,7 @@
 #include "spdlog/spdlog.h"
 
 void Scope::insertSymbol(const std::string& identifier, llvm::Value* value) {
-    spdlog::info("inserting {} into {}", identifier, name);
+    spdlog::debug("inserting {} into {}", identifier, name);
     localSymbolTable.insert({identifier, value});
 }
 
@@ -20,7 +20,7 @@ std::optional<llvm::Value*> Scope::getSymbol(const std::string& identifier) {
 
 std::optional<llvm::Value*> ScopeManager::getSymbol(
     const std::string& identifier) {
-    spdlog::info("searching for {}",identifier);
+    spdlog::debug("searching for {}",identifier);
     for (auto scope : scopes)
         if (auto symbol = scope.getSymbol(identifier); symbol.has_value())
         {

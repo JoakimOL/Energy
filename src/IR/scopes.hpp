@@ -37,7 +37,7 @@ class ScopeManager {
         return currentScope();
     };
     Scope& pushScope(Scope scope) {
-        spdlog::info("size before pushing {}", scopes.size());
+        spdlog::debug("size before pushing {}", scopes.size());
         scopes.push_front(scope);
         return currentScope();
     };

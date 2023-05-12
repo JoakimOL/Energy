@@ -15,11 +15,25 @@ int main(int argc, char** argv) {
     if (argParser.hasArg("--stdin"))
         programReader.readFromStdin();
     else
-        programReader.readFromFile(argParser.getArgValue("-f", "../demo.en"));
+    {
+        if(argParser.hasArg("-f")){
+            auto filename = argParser.getArgValue("-f","");
+            if(filename.empty())
+            {
+                spdlog::error("Invalid filename! Exiting");
+                exit(1);
+            }
+            programReader.readFromFile(filename);
+        }
+        else{
+            spdlog::error("Missing -f <filename>. Exiting");
+            exit(1);
+        }
+    }
 
     auto program = programReader.getProgram();
     if (!program.has_value()) {
-        spdlog::info("Could not read program. Exiting");
+        spdlog::error("Could not read program. Exiting");
         return 1;
     }
     ParserWrapper parser(*program);
