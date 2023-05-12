@@ -1,6 +1,0 @@
-main(int argc, string argv) -> int
-main(int argc, string argv) = {
-    int result = printf("hello world!");
-    int result = printf("%d\n",argc);
-    return result;
-}
