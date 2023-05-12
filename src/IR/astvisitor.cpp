@@ -287,6 +287,12 @@ llvm::Value *AstVisitor::visitLiteral(
     } else if (auto STRING = context->STRINGLITERAL()) {
         auto value = STRING->getText();
         return builder->CreateGlobalStringPtr(value);
+    } else if (auto LIST = context->listLiteral()){
+        auto value = LIST->getText();
+        spdlog::info("found a list literal: {}", value);
+        for (auto val: LIST->values)
+            spdlog::info(val->getText());
+        return llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ctx), 0);
     }
     spdlog::error("Couldn't find right literal type");
     return nullptr;

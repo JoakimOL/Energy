@@ -33,13 +33,14 @@ parameterList: '(' ')'
 
 block: '{' statement* '}';
 
-// typedValueList: typedValue
-//               | typedValue, typedValueList;
-
 typedValue: TYPENAME id;
+
 id: ID;
 literal : INT
-        | STRINGLITERAL;
+        | STRINGLITERAL
+        | listLiteral;
+
+listLiteral : LISTOPEN values+=literal (COMMA values+=literal)* LISTCLOSE;
 
 binop : EQUALS
       | LESSTHAN

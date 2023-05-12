@@ -6,12 +6,14 @@ lexer grammar EnergyLexer;
 
 TYPENAME: 'int'
         | 'string'
-        | '[' TYPENAME ']';
+        | LISTOPEN TYPENAME LISTCLOSE;
 RETURNARROW: '->';
 PARENOPEN: '(';
 PARENCLOSE: ')';
 BLOCKOPEN: '{';
 BLOCKCLOSE: '}';
+LISTOPEN: '[';
+LISTCLOSE: ']';
 COMMA: ',';
 EQUALS: '==';
 ASSIGNMENT: '=';
