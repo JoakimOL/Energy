@@ -1,0 +1,7 @@
+newtype coordinate = (int x, int y)
+
+main() -> int
+main() = {
+    coordinate f = 2;
+    return 0;
+}
