@@ -19,10 +19,10 @@ statement: functionCall SEMICOLON
          | returnStatement SEMICOLON
          | block;
 
-functionDeclaration: id parameterList '->' TYPENAME;
+functionDeclaration: id parameterList '->' type;
 functionDefinition: id parameterList '=' block | statement;
 functionCall: id argumentList;
-variableDeclaration: TYPENAME id '=' expression;
+variableDeclaration: type id '=' expression;
 returnStatement: RETURNKEYWORD expression;
 
 typeDefinition: NEWTYPE id '=' parameterList;
@@ -38,7 +38,9 @@ block: '{' statement* '}';
 // typedValueList: typedValue
 //               | typedValue, typedValueList;
 
-typedValue: TYPENAME id;
+typedValue: type id;
+type: TYPENAME
+    | id;
 id: ID;
 literal : INT
         | STRINGLITERAL;

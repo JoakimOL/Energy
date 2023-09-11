@@ -75,14 +75,11 @@ void AstVisitor::visitTypeDefinition(energy::EnergyParser::TypeDefinitionContext
     std::vector<llvm::Type *> fields;
     for (auto typedValue : context->parameterList()->params) {
         fields.push_back(
-            map_type_to_llvm_type(typedValue->TYPENAME()->getText()));
+            map_type_to_llvm_type(typedValue->type()->getText()));
     }
     llvm::StructType* newtype = llvm::StructType::create(module->getContext(), fields, typeName, false);
-    // newtype->setBody(llvm::ArrayRef<llvm::Type *>(llvm::Type::getInt32Ty(*ctx)));
 
-    // auto newtype = llvm::StructType::create(fields);
-    // builder->CreateAlloca(newtype, nullptr, typeName);
-
+    spdlog::info("hopefully this works right? {}", llvm::StructType::getTypeByName(module->getContext(),typeName)->getName().data());
 }
 
 /**
@@ -117,13 +114,13 @@ void AstVisitor::visitStatement(
 
 /**
  * A function declaration is just a type signature
- * functionDeclaration: id parameterList '->' TYPENAME;
+ * functionDeclaration: id parameterList '->' type;
  */
 void AstVisitor::visitFunctionDeclaration(
     energy::EnergyParser::FunctionDeclarationContext *context) {
     spdlog::debug(context->getText());
 
-    auto returnType = map_type_to_llvm_type(context->TYPENAME()->getText());
+    auto returnType = map_type_to_llvm_type(context->type()->getText());
     auto name = context->id()->getText();
 
     std::vector<llvm::Type *> paramTypes =
@@ -178,14 +175,28 @@ void AstVisitor::visitReturnStatement(
 }
 
 /**
- * variableDeclaration: TYPENAME id '=' value;
+ * variableDeclaration: type id '=' value;
  */
 void AstVisitor::visitVariableDeclaration(
     energy::EnergyParser::VariableDeclarationContext *context) {
     auto name = context->id()->getText();
+    auto type_name = context->type()->getText();
     auto value = visitExpression(context->expression());
-    auto allocation =
-        builder->CreateAlloca(llvm::Type::getInt32Ty(*ctx), nullptr, name);
+
+    // Lookup struct type in particular.
+    auto type = llvm::StructType::getTypeByName(module->getContext(), context->type()->getText());
+    llvm::AllocaInst* allocation;
+    if(type==NULL){
+        // Was not a struct, go for int
+        // should expand to simple type/struct/list
+        allocation =
+            builder->CreateAlloca(llvm::Type::getInt32Ty(*ctx), nullptr, name);
+    }
+    else {
+        // Was a struct, use it
+        allocation =
+            builder->CreateAlloca(type, nullptr, name);
+   }
     scopeManager_.currentScope().insertSymbol(name, allocation);
     builder->CreateStore(/* value */ value, /* allocated memory */ allocation);
     return;
@@ -201,7 +212,7 @@ std::vector<llvm::Type *> AstVisitor::visitParameterList(
     std::vector<llvm::Type *> paramTypes;
     for (auto typedValue : context->params) {
         paramTypes.push_back(
-            map_type_to_llvm_type(typedValue->TYPENAME()->getText()));
+            map_type_to_llvm_type(typedValue->type()->getText()));
     }
     return paramTypes;
 }
