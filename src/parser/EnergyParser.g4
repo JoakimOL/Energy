@@ -11,7 +11,8 @@ options {
 program: toplevel+ EOF;
 
 toplevel: functionDeclaration
-        | functionDefinition;
+        | functionDefinition
+        | typeDefinition;
 
 statement: variableDeclaration SEMICOLON
          | returnStatement SEMICOLON
@@ -19,11 +20,13 @@ statement: variableDeclaration SEMICOLON
          | block;
 
 ifStatement: IFKEYWORD expression statement;
-functionDeclaration: id parameterList '->' TYPENAME;
+functionDeclaration: id parameterList '->' type;
 functionDefinition: id parameterList ASSIGNMENT (block | statement);
 functionCall: id argumentList;
-variableDeclaration: TYPENAME id ASSIGNMENT expression;
+variableDeclaration: type id ASSIGNMENT expression;
 returnStatement: RETURNKEYWORD expression;
+
+typeDefinition: NEWTYPE id '=' parameterList;
 
 argumentList: '(' ')'
             | '(' args+=expression (COMMA args+=expression)* ')';
@@ -36,7 +39,9 @@ block: '{' statement* '}';
 // typedValueList: typedValue
 //               | typedValue, typedValueList;
 
-typedValue: TYPENAME id;
+typedValue: type id;
+type: TYPENAME
+    | id;
 id: ID;
 literal : INT
         | STRINGLITERAL;

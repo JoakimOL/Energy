@@ -24,6 +24,7 @@ STRINGLITERAL: '"' ~'"'* '"';
 SEMICOLON: ';';
 RETURNKEYWORD: 'return';
 IFKEYWORD: 'if';
+NEWTYPE: 'newtype';
 
 INT: Digit+;
 Digit: [0-9];
