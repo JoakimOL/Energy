@@ -4,7 +4,7 @@ PROJECT(Energy)
 
 LIST( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake )
 
-find_package(LLVM 15 REQUIRED CONFIG)
+find_package(LLVM 16 REQUIRED CONFIG)
 find_package(spdlog REQUIRED)
 message("LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 
@@ -31,8 +31,6 @@ include_directories(${antlr4cpp_include_dirs_energy})
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
-add_link_options("-lLLVM-15")
-
 # add generated grammar to demo binary target
 add_executable(energyc
     main.cpp
@@ -48,4 +46,5 @@ add_dependencies(energyc antlr4cpp antlr4cpp_generation_energy)
 target_link_libraries(energyc PRIVATE
     antlr4-runtime
     spdlog::spdlog
+    LLVM
 )
