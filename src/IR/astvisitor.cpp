@@ -86,6 +86,7 @@ void AstVisitor::visitTypeDefinition(energy::EnergyParser::TypeDefinitionContext
  *
  * statement: functionCall SEMICOLON
  *          | variableDeclaration SEMICOLON
+ *          | expressionStatement SEMICOLON
  *          | returnStatement SEMICOLON
  *          | block;
  *
@@ -98,6 +99,9 @@ void AstVisitor::visitStatement(
     } else if (auto returnStat = context->returnStatement()) {
         spdlog::debug("found return statement");
         visitReturnStatement(returnStat);
+    } else if (auto exprStat = context->expressionStatement()) {
+        spdlog::debug("found expression statement");
+        visitExpressionStatement(exprStat);
     } else if (auto block = context->block()) {
         spdlog::debug("found block");
         visitBlock(block);
@@ -198,6 +202,21 @@ void AstVisitor::visitReturnStatement(
     spdlog::debug(context->getText());
     auto value = visitExpression(context->expression());
     builder->CreateRet(value);
+}
+
+/**
+ * expressionStatement: expression;
+ */
+void AstVisitor::visitExpressionStatement(
+        energy::EnergyParser::ExpressionStatementContext *context) {
+    spdlog::debug(context->getText());
+    // if c++ allows you to have a lonely literal that does nothing, we can too
+    // code like
+    // main() = {
+    //     2;
+    // }
+    // is now allowed, yet useless.
+    auto value = visitExpression(context->expression());
 }
 
 /**

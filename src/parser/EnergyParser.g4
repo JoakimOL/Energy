@@ -16,6 +16,7 @@ toplevel: functionDeclaration
 
 statement: variableDeclaration SEMICOLON
          | returnStatement SEMICOLON
+         | expressionStatement SEMICOLON
          | ifStatement
          | block;
 
@@ -34,10 +35,9 @@ argumentList: '(' ')'
 parameterList: '(' ')'
              | '(' params+=typedValue(COMMA params+=typedValue)* ')';
 
-block: '{' statement* '}';
+expressionStatement: expression;
 
-// typedValueList: typedValue
-//               | typedValue, typedValueList;
+block: '{' statement* '}';
 
 typedValue: type id;
 type: TYPENAME
