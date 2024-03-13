@@ -21,7 +21,7 @@ statement: variableDeclaration SEMICOLON
          | block;
 
 ifStatement: IFKEYWORD expression statement;
-functionDeclaration: id parameterList '->' type;
+functionDeclaration: id parameterList RETURNARROW type;
 functionDefinition: id parameterList ASSIGNMENT (block | statement);
 functionCall: id argumentList;
 variableDeclaration: type id ASSIGNMENT expression;
