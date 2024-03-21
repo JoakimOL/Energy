@@ -342,9 +342,23 @@ llvm::Value *AstVisitor::visitLiteral(
     } else if (auto STRING = context->STRINGLITERAL()) {
         auto value = STRING->getText();
         return builder->CreateGlobalStringPtr(value);
+    } else if (auto struct_value = context->structLiteral()) {
+        spdlog::info("found a struct literal: {}", struct_value->getText());
+        std::vector<llvm::Value*> values;
+        for (auto &field : struct_value->fields) {
+            spdlog::info(field->getText());
+            auto value = visitLiteral(field);
+            values.emplace_back(value);
+        }
+        auto s = llvm::StructType::create( *ctx );
+        return s;
+        // return values;
+
+
+        // return llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ctx), 10);
     }
     spdlog::error("Couldn't find right literal type");
-    return nullptr;
+    return {};
 }
 
 /*

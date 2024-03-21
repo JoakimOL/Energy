@@ -1,0 +1,9 @@
+newtype coordinate = (int x, int y)
+
+main() -> int
+main() = {
+    coordinate coor = {5, 2};
+    int written = printf("%d", coor);
+    return written;
+}
+

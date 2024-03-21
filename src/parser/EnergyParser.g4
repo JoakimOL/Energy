@@ -44,7 +44,10 @@ type: TYPENAME
     | id;
 id: ID;
 literal : INT
-        | STRINGLITERAL;
+        | STRINGLITERAL
+        | structLiteral;
+
+structLiteral : '{' fields+=literal (COMMA fields+=literal)* '}';
 
 binop : EQUALS
       | LESSTHAN
