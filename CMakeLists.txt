@@ -8,6 +8,12 @@ find_package(LLVM 16 REQUIRED CONFIG)
 find_package(spdlog REQUIRED)
 message("LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 
+# create debug symbols disable optimizations
+# set(CMAKE_BUILD_TYPE Debug)
+
+# create debug symbols, keep optimizations
+# set (CMAKE_BUILD_TYPE RelWithDebInfo)
+
 # compiler must be 11 or 14?
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
