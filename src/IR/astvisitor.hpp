@@ -81,6 +81,12 @@ class AstVisitor {
     std::unique_ptr<llvm::IRBuilder<>> builder;
 
     llvm::Type *map_type_to_llvm_type(const std::string &type);
+    void createFunctionDeclaration(const std::string& name,
+                                   llvm::Type* returnType,
+                                   std::vector<llvm::Type *> parameterTypes);
+    Scope createFunctionDefinition(const std::string& name,
+                                   std::vector<std::string> parameters);
+
 };
 
 #endif  // ASTVISITOR_H

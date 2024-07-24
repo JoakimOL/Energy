@@ -1,9 +1,51 @@
 #include "astvisitor.hpp"
 
 #include <algorithm>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/Instruction.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/Type.h>
 #include <llvm/ADT/ArrayRef.h>
 
+#include "EnergyParser.h"
 #include "spdlog/spdlog.h"
+
+void AstVisitor::createFunctionDeclaration(const std::string& name,
+                                           llvm::Type* returnType,
+                                           std::vector<llvm::Type *> parameterTypes){
+
+    auto functionType = llvm::FunctionType::get(returnType, parameterTypes, false);
+    auto function = llvm::Function::Create(
+        functionType, llvm::GlobalValue::LinkageTypes::ExternalLinkage, name,
+        this->module.get());
+
+    scopeManager_.globalScope().insertSymbol(name, function);
+}
+Scope AstVisitor::createFunctionDefinition(const std::string& name,
+                                           std::vector<std::string> parameters){
+
+    auto basicBlock = llvm::BasicBlock::Create(builder->getContext());
+    auto function = static_cast<llvm::Function *>(
+        scopeManager_.globalScope().getSymbol(name).value_or(nullptr));
+    currentFunction = function;
+
+    basicBlock->insertInto(function);
+    builder->SetInsertPoint(basicBlock);
+
+    Scope scope(name);
+
+    int i = 0;
+    for(auto it = function->arg_begin(); it != function->arg_end(); it++){
+        if(it == nullptr)
+            spdlog::warn("it is nullptr!");
+        spdlog::info("parameter[i] = {}", parameters[i]);
+        auto param = builder->CreateAlloca(llvm::Type::getInt32Ty(*ctx), nullptr, parameters[i]);
+        builder->CreateStore(it, param);
+        scope.insertSymbol(parameters[i], param);
+        i++;
+    }
+    return scope;
+}
 
 llvm::Type *AstVisitor::map_type_to_llvm_type(const std::string &type) {
     if (type == "int") {
@@ -11,7 +53,8 @@ llvm::Type *AstVisitor::map_type_to_llvm_type(const std::string &type) {
         return llvm::Type::getInt32Ty(*ctx);
     } else if (type == "string") {
         spdlog::debug("returning string type (i8 array)");
-        return llvm::Type::getInt8PtrTy(*ctx);
+        return builder->getPtrTy();
+        // return llvm::Type::getInt8PtrTy(*ctx);
     }
     spdlog::debug("couldn't find type! returning");
     exit(1);
@@ -72,11 +115,42 @@ void AstVisitor::visitTypeDefinition(energy::EnergyParser::TypeDefinitionContext
     spdlog::info("new type name: {}", typeName);
 
     std::vector<llvm::Type *> fields;
+    std::vector<std::string> fieldnames;
     for (auto typedValue : context->parameterList()->params) {
+        fieldnames.push_back(typedValue->getText());
         fields.push_back(
             map_type_to_llvm_type(typedValue->type()->getText()));
     }
     llvm::StructType* newtype = llvm::StructType::create(module->getContext(), fields, typeName, false);
+    createFunctionDeclaration("new_"+typeName, newtype, fields);
+    Scope scope = createFunctionDefinition("new_"+typeName, fieldnames);
+    // create scope to put names in
+    // XXX: Do I even need a scope for this?
+    scopeManager_.pushScope(scope);
+    // create the struct
+    llvm::AllocaInst* allocation = builder->CreateAlloca(newtype);
+
+    // Store parameters in the struct
+    for(size_t i = 0; i < fields.size(); i++){
+        auto name = fieldnames[i];
+        llvm::Value * symbol = scope.getSymbol(name).value_or(nullptr);
+        if(!symbol) spdlog::warn("This can't be good. Didn't find {}", name);
+
+        llvm::Value * i32zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ctx), 0);
+        llvm::Value * i32i = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ctx), i);
+
+        // we need the i32zero first in the indices list
+        // see https://llvm.org/docs/GetElementPtr.html
+        llvm::Value * indices[2] = {i32zero, i32i};
+
+        auto gep = builder->CreateInBoundsGEP(newtype, allocation, llvm::ArrayRef<llvm::Value* >(indices, 2));
+        builder->CreateStore(symbol, gep);
+    }
+
+    //done 
+    scopeManager_.popScope();
+
+
 
     spdlog::info("hopefully this works right? {}", llvm::StructType::getTypeByName(module->getContext(),typeName)->getName().data());
 }
@@ -129,12 +203,13 @@ void AstVisitor::visitFunctionDeclaration(
     std::vector<llvm::Type *> paramTypes =
         visitParameterList(context->parameterList());
 
-    auto functionType = llvm::FunctionType::get(returnType, paramTypes, false);
-    auto function = llvm::Function::Create(
-        functionType, llvm::GlobalValue::LinkageTypes::ExternalLinkage, name,
-        this->module.get());
+    createFunctionDeclaration(name, returnType, paramTypes);
+    // auto functionType = llvm::FunctionType::get(returnType, paramTypes, false);
+    // auto function = llvm::Function::Create(
+    //     functionType, llvm::GlobalValue::LinkageTypes::ExternalLinkage, name,
+    //     this->module.get());
 
-    scopeManager_.globalScope().insertSymbol(name, function);
+    // scopeManager_.globalScope().insertSymbol(name, function);
 }
 
 /**
@@ -146,29 +221,39 @@ void AstVisitor::visitFunctionDefinition(
 
     auto basicBlock = llvm::BasicBlock::Create(builder->getContext());
     auto name = context->id()->getText();
-    auto function = static_cast<llvm::Function *>(
-        scopeManager_.globalScope().getSymbol(name).value_or(nullptr));
-    currentFunction = function;
+    auto parametercontexts = context->parameterList()->typedValue();
+    auto parameters = std::vector<std::string>();
+    std::for_each(
+        context->parameterList()->params.cbegin(),
+        context->parameterList()->params.cend(),
+        // parameters.begin(),
+        [&parameters](energy::EnergyParser::TypedValueContext* c){
+            parameters.emplace_back(c->id()->getText());
+        }
+    );
+    Scope scope = createFunctionDefinition(name, parameters);
+    // auto function = static_cast<llvm::Function *>(
+        // scopeManager_.globalScope().getSymbol(name).value_or(nullptr));
+    // currentFunction = function;
 
-    basicBlock->insertInto(function);
-    builder->SetInsertPoint(basicBlock);
+    // basicBlock->insertInto(function);
+    // builder->SetInsertPoint(basicBlock);
 
-    Scope scope(name);
+    // Scope scope(name);
 
     // XXX
     // what the actual shit is this.
     // I have less than 1 hour left of work btw
-    auto parametercontexts = context->parameterList()->params;
-    std::vector<std::pair<std::string, llvm::Value *>> parameters;
-    int i = 0;
-    for(auto it = function->arg_begin(); it != function->arg_end(); it++){
-        if(it == nullptr)
-            spdlog::warn("it is nullptr!");
-        auto param = builder->CreateAlloca(llvm::Type::getInt32Ty(*ctx), nullptr, parametercontexts[i]->id()->getText());
-        builder->CreateStore(it, param);
-        scope.insertSymbol(parametercontexts[i]->id()->getText(), param);
-        i++;
-    }
+    // std::vector<std::pair<std::string, llvm::Value *>> parameters;
+    // int i = 0;
+    // for(auto it = function->arg_begin(); it != function->arg_end(); it++){
+    //     if(it == nullptr)
+    //         spdlog::warn("it is nullptr!");
+    //     auto param = builder->CreateAlloca(llvm::Type::getInt32Ty(*ctx), nullptr, parametercontexts[i]->id()->getText());
+    //     builder->CreateStore(it, param);
+    //     scope.insertSymbol(parametercontexts[i]->id()->getText(), param);
+    //     i++;
+    // }
 
     if (auto block = context->block())
         visitBlock(context->block(), scope);
@@ -225,7 +310,7 @@ void AstVisitor::visitExpressionStatement(
 void AstVisitor::visitVariableDeclaration(
     energy::EnergyParser::VariableDeclarationContext *context) {
     auto name = context->id()->getText();
-    auto type_name = context->type()->getText();
+    auto type_name  = context->type()->getText();
     auto value = visitExpression(context->expression());
 
     // Lookup struct type in particular.
@@ -342,20 +427,6 @@ llvm::Value *AstVisitor::visitLiteral(
     } else if (auto STRING = context->STRINGLITERAL()) {
         auto value = STRING->getText();
         return builder->CreateGlobalStringPtr(value);
-    } else if (auto struct_value = context->structLiteral()) {
-        spdlog::info("found a struct literal: {}", struct_value->getText());
-        std::vector<llvm::Value*> values;
-        for (auto &field : struct_value->fields) {
-            spdlog::info(field->getText());
-            auto value = visitLiteral(field);
-            values.emplace_back(value);
-        }
-        auto s = llvm::StructType::create( *ctx );
-        return s;
-        // return values;
-
-
-        // return llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ctx), 10);
     }
     spdlog::error("Couldn't find right literal type");
     return {};
