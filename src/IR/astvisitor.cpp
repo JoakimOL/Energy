@@ -107,6 +107,7 @@ void AstVisitor::visitToplevel(energy::EnergyParser::ToplevelContext *context) {
  */
 void AstVisitor::visitTypeDefinition(energy::EnergyParser::TypeDefinitionContext *context){
     auto typeName = context->id()->getText();
+    auto ptrtype = llvm::IntegerType::get(*ctx, 64);
     spdlog::info("new type name: {}", typeName);
 
     std::vector<llvm::Type *> fields;
@@ -117,7 +118,8 @@ void AstVisitor::visitTypeDefinition(energy::EnergyParser::TypeDefinitionContext
             map_type_to_llvm_type(typedValue->type()->getText()));
     }
     llvm::StructType* newtype = llvm::StructType::create(module->getContext(), fields, typeName, false);
-    createFunctionDeclaration("new_"+typeName, newtype, fields);
+    createFunctionDeclaration("new_"+typeName, ptrtype, fields);
+    // createFunctionDeclaration("new_"+typeName, newtype, fields);
     Scope scope = createFunctionDefinition("new_"+typeName, fieldnames);
     // create scope to put names in
     // XXX: Do I even need a scope for this?
@@ -128,6 +130,7 @@ void AstVisitor::visitTypeDefinition(energy::EnergyParser::TypeDefinitionContext
     // Store parameters in the struct
     for(size_t i = 0; i < fields.size(); i++){
         auto name = fieldnames[i];
+        auto type = fields[i];
         llvm::Value * symbol = scope.getSymbol(name).value_or(nullptr);
         if(!symbol) spdlog::warn("This can't be good. Didn't find {}", name);
 
@@ -138,9 +141,13 @@ void AstVisitor::visitTypeDefinition(energy::EnergyParser::TypeDefinitionContext
         // see https://llvm.org/docs/GetElementPtr.html
         llvm::Value * indices[2] = {i32zero, i32i};
 
+        auto loadinst = builder->CreateLoad(type, symbol);
         auto gep = builder->CreateInBoundsGEP(newtype, allocation, llvm::ArrayRef<llvm::Value* >(indices, 2));
-        builder->CreateStore(symbol, gep);
+        builder->CreateStore(loadinst, gep);
+
     }
+    auto loadinst = builder->CreateLoad(ptrtype, allocation);
+    builder->CreateRet(loadinst);
 
     //done 
     scopeManager_.popScope();
