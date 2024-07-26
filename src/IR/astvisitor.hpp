@@ -69,6 +69,8 @@ class AstVisitor {
     void visitExpressionStatement(
         energy::EnergyParser::ExpressionStatementContext *context);
 
+    llvm::Value *visitId(energy::EnergyParser::IdContext *context);
+
     llvm::Value *visitLiteral(energy::EnergyParser::LiteralContext *context);
 
     llvm::Value *visitExpression(

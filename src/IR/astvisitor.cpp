@@ -350,6 +350,17 @@ std::vector<llvm::Type *> AstVisitor::visitParameterList(
 }
 
 /**
+ * indexingExpression: id INDEX id
+ *                   | indexingExpression INDEX id
+ *                   | functionCall INDEX id
+ *                   ;
+ */
+llvm::Value *AstVisitor::visitIndexingExpression(
+    energy::EnergyParser::IndexingExpressionContext *context) {
+    return nullptr;
+}
+
+/**
  * functionCall: id argumentList;
  */
 llvm::Value *AstVisitor::visitFunctionCall(
@@ -380,15 +391,8 @@ llvm::Value *AstVisitor::visitFunctionCall(
 llvm::Value *AstVisitor::visitExpression(
     energy::EnergyParser::ExpressionContext *context) {
     if (auto id = context->id()) {
-        auto name = id->getText();
-        spdlog::debug("found an identifier expression. name: {}", name);
-        // scopeManager_.printAllIdentifiersInLocal();
-        auto *value = static_cast<llvm::AllocaInst *>(
-            scopeManager_.getSymbol(name).value_or(nullptr));
-        if (!value) spdlog::error("identifier not found");
-        auto loadinst =
-            builder->CreateLoad(value->getAllocatedType(), value, name);
-        return loadinst;
+        spdlog::debug("found an identifier");
+        return visitId(id);
     } else if (auto literal = context->literal()) {
         spdlog::debug("found a literal");
         return visitLiteral(literal);
@@ -418,6 +422,26 @@ llvm::Value *AstVisitor::visitExpression(
     return nullptr;
 }
 
+/**
+ *  id: ID;
+ */
+llvm::Value *AstVisitor::visitId(
+    energy::EnergyParser::IdContext *context) {
+    auto name = context->getText();
+    spdlog::debug("found an identifier expression. name: {}", name);
+    // scopeManager_.printAllIdentifiersInLocal();
+    auto *value = static_cast<llvm::AllocaInst *>(
+        scopeManager_.getSymbol(name).value_or(nullptr));
+    if (!value) spdlog::error("identifier not found");
+    auto loadinst =
+        builder->CreateLoad(value->getAllocatedType(), value, name);
+    return loadinst;
+}
+
+/**
+*  literal : INT
+*          | STRINGLITERAL;
+*/
 llvm::Value *AstVisitor::visitLiteral(
     energy::EnergyParser::LiteralContext *context) {
     // spdlog::debug(context->getText());
