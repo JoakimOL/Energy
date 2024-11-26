@@ -37,6 +37,11 @@ parameterList: '(' ')'
 
 expressionStatement: expression;
 
+indexingExpression: id INDEX id
+                  | indexingExpression INDEX id
+				  | functionCall INDEX id
+;
+ 
 block: '{' statement* '}';
 
 typedValue: type id;
@@ -52,10 +57,13 @@ binop : EQUALS
       | PLUS
       | MINUS
       | MUL
-      | GREATERTHAN;
+      | GREATERTHAN
+	  ;
 
 expression: id
           | literal
           | '(' expression ')'
           | expression binop expression
-          | functionCall;
+          | functionCall
+		  | indexingExpression
+		  ;

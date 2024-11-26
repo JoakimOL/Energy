@@ -48,10 +48,14 @@ class ScopeManager {
     size_t depth() { return scopes.size(); }
     Scope& globalScope() { return globalScope_; }
     Scope& currentScope() { return scopes.front(); }
+    // bool add_new_user_defined_type(const std::string& type_name, const std::vector<std::string>& parameter_names);
+    bool add_new_user_defined_type(const std::string& type_name, const std::vector<std::string> &parameter_names, const std::vector<llvm::Type*> types);
+    std::optional<std::vector<std::string>> get_user_defined_type(const std::string& type_name);
 
    private:
     std::deque<Scope> scopes;
     Scope globalScope_{"global"};
+    std::map<std::string, std::vector<std::string>> user_defined_types; // this is global for now.
 };
 
 #endif  // SCOPES_H

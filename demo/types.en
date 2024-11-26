@@ -1,12 +1,17 @@
 newtype coordinate = (int x, int y)
-newtype hamburger = (string str, int x)
+newtype test = (coordinate x, int y)
 
 main() -> int
 main() = {
-    //coordinate coor = {5, 2};
-    //int written = printf("%d", coor);
-    coordinate coor = new_coordinate(2,3);
-    hamburger wot = new_hamburger("foo",2);
+    int x = 100;
+    coordinate coor = new_coordinate(2,x);
+    // coor.x = 3;
+    printf("%d", coor.x);
+    printf("%d", coor.y);
+
+    // test woot = new_test(coor, 5);
+    // printf("%d", woot.y);
+
     return 3;
 }
 

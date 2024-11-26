@@ -44,6 +44,9 @@ class AstVisitor {
     void visitFunctionDefinition(
         energy::EnergyParser::FunctionDefinitionContext *context);
 
+    llvm::Value *visitIndexingExpression(
+        energy::EnergyParser::IndexingExpressionContext *context);
+
     llvm::Value *visitFunctionCall(
         energy::EnergyParser::FunctionCallContext *context);
 
@@ -88,6 +91,7 @@ class AstVisitor {
                                    std::vector<llvm::Type *> parameterTypes);
     Scope createFunctionDefinition(const std::string& name,
                                    std::vector<std::string> parameters);
+    std::optional<size_t> get_field_index(const std::string& type_name, const std::string& index);
 
 };
 

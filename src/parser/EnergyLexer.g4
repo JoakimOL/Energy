@@ -20,6 +20,7 @@ GREATERTHAN: '>';
 PLUS: '+';
 MINUS: '-';
 MUL: '*';
+INDEX: '.';
 STRINGLITERAL: '"' ~'"'* '"';
 SEMICOLON: ';';
 RETURNKEYWORD: 'return';
@@ -29,7 +30,7 @@ NEWTYPE: 'newtype';
 INT: Digit+;
 Digit: [0-9];
 
-ID: LETTER (LETTER | '0'..'9' | [._-])*;
+ID: LETTER (LETTER | '0'..'9' | [_-])*;
 fragment LETTER : [a-zA-Z\u0080-\uFFFF];
 
 WS: [ \t]+ -> skip;

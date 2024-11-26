@@ -1,9 +1,30 @@
 #include "astvisitor.hpp"
 
 #include <algorithm>
+#include <cassert>
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/Support/Casting.h>
+#include <optional>
 
 #include "EnergyParser.h"
 #include "spdlog/spdlog.h"
+
+std::optional<size_t> AstVisitor::get_field_index(
+    const std::string& type_name, const std::string& index){
+    auto ptrtype = llvm::IntegerType::get(*ctx, 64);
+
+    auto maybe_params = scopeManager_.get_user_defined_type(type_name);
+    assert(maybe_params.has_value());
+    assert(maybe_params.value().size() > 0);
+    auto params = maybe_params.value();
+
+    for(size_t i = 0; i < params.size(); i++){
+        spdlog::info("looking for {}, got {}", index, params[i]);
+        if(params[i] == index)
+            return i;
+    }
+    return std::nullopt;
+}
 
 void AstVisitor::createFunctionDeclaration(const std::string& name,
                                            llvm::Type* returnType,
@@ -34,6 +55,9 @@ Scope AstVisitor::createFunctionDefinition(const std::string& name,
         if(it == nullptr)
             spdlog::warn("it is nullptr!");
         spdlog::info("parameter[i] = {}", parameters[i]);
+        // XXX
+        // here we always assume parameters are int types
+        // prevents us from using user defined types
         auto param = builder->CreateAlloca(llvm::Type::getInt32Ty(*ctx), nullptr, parameters[i]);
         builder->CreateStore(it, param);
         scope.insertSymbol(parameters[i], param);
@@ -50,9 +74,14 @@ llvm::Type *AstVisitor::map_type_to_llvm_type(const std::string &type) {
         spdlog::debug("returning string type (i8 array)");
         return builder->getPtrTy();
         // return llvm::Type::getInt8PtrTy(*ctx);
+    } else {
+        auto user_defined_type = llvm::StructType::getTypeByName(module->getContext(),type);
+        if(!user_defined_type){
+            spdlog::error("couldn't find type! returning");
+            exit(1);
+        }
+        return user_defined_type;
     }
-    spdlog::debug("couldn't find type! returning");
-    exit(1);
 }
 
 void AstVisitor::compile(energy::EnergyParser::ProgramContext *program, const std::string& outfile) {
@@ -113,9 +142,14 @@ void AstVisitor::visitTypeDefinition(energy::EnergyParser::TypeDefinitionContext
     std::vector<llvm::Type *> fields;
     std::vector<std::string> fieldnames;
     for (auto typedValue : context->parameterList()->params) {
-        fieldnames.push_back(typedValue->getText());
+        fieldnames.push_back(typedValue->id()->getText());
+        spdlog::debug("with field: {}", fieldnames.back());
         fields.push_back(
             map_type_to_llvm_type(typedValue->type()->getText()));
+    }
+    if(!scopeManager_.add_new_user_defined_type(typeName, fieldnames, fields)){
+        spdlog::error("user defined type of same name exists!\n");
+        exit(1);
     }
     llvm::StructType* newtype = llvm::StructType::create(module->getContext(), fields, typeName, false);
     createFunctionDeclaration("new_"+typeName, ptrtype, fields);
@@ -357,7 +391,53 @@ std::vector<llvm::Type *> AstVisitor::visitParameterList(
  */
 llvm::Value *AstVisitor::visitIndexingExpression(
     energy::EnergyParser::IndexingExpressionContext *context) {
-    return nullptr;
+    std::optional<llvm::Value*> maybe_LHS = std::nullopt;
+    auto field_name = context->id().back();
+    if(context->id().size() != 1){
+        // case:
+        // id INDEX id
+        maybe_LHS = visitId(context->id(0));
+        // LHS = scopeManager_.getSymbol(context->id(0)->getText());
+        // spdlog::info("indexing expression base: {}, base type: {} field_name: {}", 
+        spdlog::info("indexing expression base: {}, field_name: {}", 
+                     context->id(0)->getText(),
+                     field_name->getText());
+
+    } else if(auto functionCall = context->functionCall()){
+        // case:
+        // functionCall INDEX id
+        maybe_LHS = visitFunctionCall(functionCall);
+        spdlog::info("indexing expression base: {} field_name: {}", 
+                     context->functionCall()->getText(),
+                     field_name->getText());
+    } else if(auto indexingExpression = context->indexingExpression()){
+        // case:
+        // indexingExpression INDEX id
+        maybe_LHS = visitIndexingExpression(indexingExpression);
+        spdlog::info("indexing expression base: {} field_name: {}", 
+                     context->indexingExpression()->getText(),
+                     field_name->getText());
+    }
+    assert(maybe_LHS.has_value());
+    auto LHS = maybe_LHS.value();
+
+    auto base_name = context->id(0)->getText();
+    auto *allocainst = static_cast<llvm::AllocaInst *>(
+        scopeManager_.getSymbol(base_name).value_or(nullptr));
+    auto type_name = LHS->getType()->getStructName().str();
+    auto field_index = get_field_index(type_name, field_name->getText());
+    assert(field_index.has_value());
+    spdlog::debug("LHS of type {} has field {} at index {}", type_name, field_name->getText(), field_index.value());
+
+    llvm::Value * i32zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ctx), 0);
+    llvm::Value * i32i = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ctx), field_index.value());
+
+    // we need the i32zero first in the indices list
+    // see https://llvm.org/docs/GetElementPtr.html
+    llvm::Value * indices[2] = {i32zero, i32i};
+    
+    auto gep = builder->CreateInBoundsGEP(LHS->getType(), allocainst, llvm::ArrayRef<llvm::Value* >(indices, 2));
+    return builder->CreateLoad(LHS->getType(), gep);
 }
 
 /**
@@ -418,6 +498,9 @@ llvm::Value *AstVisitor::visitExpression(
     } else if (auto funcCall = context->functionCall()) {
         spdlog::debug("found function call");
         return visitFunctionCall(funcCall);
+    } else if (auto indexExpression = context->indexingExpression()){
+        spdlog::info("we found an indexing expression");
+        return visitIndexingExpression(indexExpression);
     }
     return nullptr;
 }
@@ -433,8 +516,8 @@ llvm::Value *AstVisitor::visitId(
     auto *value = static_cast<llvm::AllocaInst *>(
         scopeManager_.getSymbol(name).value_or(nullptr));
     if (!value) spdlog::error("identifier not found");
-    auto loadinst =
-        builder->CreateLoad(value->getAllocatedType(), value, name);
+    auto type = value->getAllocatedType();
+    auto loadinst = builder->CreateLoad(type, value, name);
     return loadinst;
 }
 
