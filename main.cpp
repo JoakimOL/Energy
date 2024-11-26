@@ -3,15 +3,16 @@
 #include "src/IR/astvisitor.hpp"
 #include "src/parser/parser.hpp"
 #include "src/utils/cli.hpp"
-#include "src/utils/logger.hpp"
 #include "src/utils/programreader.hpp"
+#include <spdlog/spdlog.h>
 
 int main(int argc, char** argv) {
     ArgParser argParser(argc, argv);
 
-    setup_logger();
-
     ProgramReader programReader;
+
+    if(argParser.hasArg("-v")) spdlog::set_level(spdlog::level::debug);
+
     if (argParser.hasArg("--stdin"))
         programReader.readFromStdin();
     else

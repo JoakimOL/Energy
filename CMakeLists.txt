@@ -45,7 +45,6 @@ add_executable(energyc
     src/parser/parser.cpp
     src/utils/cli.cpp
     src/utils/programreader.cpp
-    src/utils/logger.cpp
     ${antlr4cpp_src_files_energy})
 add_dependencies(energyc antlr4cpp antlr4cpp_generation_energy)
 
