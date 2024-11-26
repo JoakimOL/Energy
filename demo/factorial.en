@@ -3,7 +3,7 @@ factorial(int n) -> int
 main() -> int
 main() = {
     int result = factorial(5);
-    int written = printf("%d", result);
+    printf("%d", result);
     return 0;
 }
 
